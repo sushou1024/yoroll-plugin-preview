@@ -1,0 +1,39 @@
+{
+  "name": "yoroll-test-plugin",
+  "version": "0.1.0+codex.20260713145023",
+  "description": "Open Yoroll in Codex and guide browser-based interactive game workflows.",
+  "author": {
+    "name": "Yoroll Developer Preview",
+    "url": "https://app.yoroll.ai"
+  },
+  "homepage": "https://app.yoroll.ai",
+  "repository": "https://github.com/sushou1024/yoroll-plugin-preview",
+  "keywords": [
+    "yoroll",
+    "workflow",
+    "game-creation",
+    "browser",
+    "preview"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Yoroll Workflow Preview",
+    "shortDescription": "Open Yoroll and start a browser-based workflow",
+    "longDescription": "A developer preview for opening Yoroll in the built-in browser, completing sign-in securely, explaining the game-creation workflow, and assisting with visible website actions. This version intentionally contains no Yoroll MCP server.",
+    "developerName": "Yoroll Developer Preview",
+    "category": "Design",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://app.yoroll.ai",
+    "defaultPrompt": [
+      "Open Yoroll and show me what I can create",
+      "Start a Yoroll Workflow in the built-in browser",
+      "Help me create an interactive game with Yoroll"
+    ],
+    "brandColor": "#FF8652",
+    "composerIcon": "./assets/logo.png",
+    "logo": "./assets/logo.png"
+  }
+}
