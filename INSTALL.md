@@ -56,7 +56,11 @@ Add the public preview marketplace from its `main` branch:
 "<BUNDLED_CODEX>" plugin marketplace add https://github.com/sushou1024/yoroll-plugin-preview.git --ref main
 ```
 
-If that exact marketplace is already configured, keep the existing entry and continue. Do not treat an already-added marketplace as an installation failure.
+If that exact marketplace is already configured, do not treat it as an installation failure. Refresh its snapshot before continuing:
+
+```text
+"<BUNDLED_CODEX>" plugin marketplace upgrade ennio-yoroll-preview
+```
 
 List marketplaces and note the assigned marketplace name:
 
