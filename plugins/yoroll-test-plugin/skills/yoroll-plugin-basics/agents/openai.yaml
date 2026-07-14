@@ -1,4 +1,4 @@
 interface:
   display_name: "Yoroll"
   short_description: "Create interactive games with Yoroll"
-  default_prompt: "Use $yoroll-plugin-basics to help me start making my first interactive game with Yoroll."
+  default_prompt: "Use $yoroll-plugin-basics to open Yoroll and briefly explain what it can do."

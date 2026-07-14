@@ -42,6 +42,7 @@ When the user arrives from the installer prompt or asks what Yoroll can do:
 3. After the page is ready, use the welcome structure below: confirm the Workflow is open with its link, list three capability groups, ask the two numbered questions, and close with the editable-workflow reminder.
 4. Do not claim that a project was created unless the visible website or a future Yoroll tool confirms it.
 5. Do not mention installation mechanics, browser routing, preview status, MCP, limitations, or safety rules in the welcome unless the user asks or a limitation actually blocks the requested action.
+6. Do not choose a game concept, answer the onboarding questions on the user's behalf, draft a sample game, write a game brief, or generate a prompt for the user to paste into Yoroll. After the welcome and questions, stop and wait for the user's reply.
 
 Preferred Chinese welcome after the page is ready:
 
@@ -77,7 +78,8 @@ Translate these naturally into the resolved user language rather than adding mor
 - Keep actions within Yoroll while this skill is active.
 - Ask for confirmation immediately before publishing a game, spending credits, starting paid generation, deleting work, or performing another consequential action.
 - After an action, verify the visible result in proportion to its risk and report only what the page confirms.
-- If browser control cannot perform an action, explain the exact limitation and leave the relevant Yoroll page open for the user to finish manually.
+- If browser control cannot perform an action, state the exact limitation briefly and leave the relevant Yoroll page open for the user to finish manually.
+- Never respond to a browser failure by generating a substitute prompt, game specification, code block, or other content for the user to copy and paste into Yoroll. Do not invent a workaround task on the user's behalf.
 
 ## Respect preview boundaries
 

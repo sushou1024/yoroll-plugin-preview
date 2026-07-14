@@ -88,14 +88,14 @@ Use this priority without asking the user:
 3. The language of the user's current conversation, favoring the latest user message when mixed.
 4. English when no language can be inferred.
 
-Use the exact short prompt below for Chinese or English. For another language, translate the English prompt faithfully while keeping `Yoroll` unchanged. Keep this as a natural user request; browser opening and onboarding belong to the installed skill. Do not append capabilities, implementation notes, MCP disclaimers, workflow details, or other instructions to this prompt.
+Use the exact short prompt below for Chinese or English. For another language, translate the English prompt faithfully while keeping `Yoroll` unchanged. Keep this as a natural user request; browser opening and onboarding belong to the installed skill. Do not append capabilities, implementation notes, MCP disclaimers, workflow details, or other instructions to this prompt. The new task must not interpret this prompt as permission to invent a game concept, brief, or pasteable Yoroll prompt.
 
 ```text
 Chinese:
-我想用 Yoroll 制作第一个互动游戏，请带我开始。
+请打开 Yoroll，简要介绍它能做什么，然后等待我的下一步指令。
 
 English:
-I want to make my first interactive game with Yoroll. Help me get started.
+Open Yoroll, briefly explain what it can do, and then wait for my next instruction.
 ```
 
 ## Required final step: create and open the first Yoroll task
