@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "yoroll": {
+      "type": "http",
+      "url": "https://mcp.yoroll.ai/mcp",
+      "auth": "oauth",
+      "oauth_resource": "https://mcp.yoroll.ai/mcp",
+      "scopes": [
+        "account:read",
+        "credits:read",
+        "projects:read",
+        "projects:write",
+        "publish:read",
+        "publish:write",
+        "media:image",
+        "media:video",
+        "media:audio",
+        "media:read",
+        "operations:read",
+        "operations:write",
+        "web:session"
+      ]
+    }
+  }
+}
