@@ -1,6 +1,6 @@
 {
   "name": "yoroll-test-plugin",
-  "version": "0.2.0+codex.20260716024448",
+  "version": "0.2.0+codex.20260716122646",
   "description": "Use Yoroll's OAuth MCP tools and pair a read-only Browser without signing in twice.",
   "author": {
     "name": "Yoroll Developer Preview",
@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "Yoroll MCP Preview",
     "shortDescription": "Create workflows and media with Yoroll MCP",
-    "longDescription": "A test-environment preview with 40 account, project, publishing, media, and operation tools plus Browser-first session pairing. Create and edit through OAuth MCP, generate standalone media without a project, and inspect signed-in Yoroll pages in Codex's read-only Browser without a second login.",
+    "longDescription": "A test-environment preview with 67 account, workflow, publishing, media, and operation tools plus one Browser-session pairing tool. Create and edit workflow structure and canvas state through OAuth MCP, inspect asset history, generate standalone media without a project, and view signed-in Yoroll pages in Codex's read-only Browser without a second login.",
     "developerName": "Yoroll Developer Preview",
     "category": "Design",
     "capabilities": [

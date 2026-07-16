@@ -53,17 +53,22 @@ In a new task, try:
 
 Expected behavior:
 
+- The plugin exposes 67 business tools plus the target-independent `approve_browser_session` pairing tool.
 - Account, credits, projects, media, and publishing use Yoroll MCP tools.
 - Standalone media does not ask for a project ID.
 - Image/video results may have a tab `web_url`; speech/BGM results do not.
-- Workflow edits happen through MCP while the Browser remains read-only.
-- `expected_updated_at`, when used, is described only as a test-preview stale-state preflight—not a revision or CAS token.
+- Workflow reads, structure/canvas edits, history selection, and workflow media happen through MCP while the Browser remains read-only.
+- Short database-only authoring mutations may use a read-returned `revision` as `expected_revision` for atomic compare-and-swap.
+- `regenerate_scene_image` and `generate_first_frame_image` may also use `expected_revision`; it atomically protects acceptance of the exact queued job and credit reservation, while completion remains asynchronous.
+- Other long-running project generation and workflow-media actions use `expected_updated_at` only as a pre-dispatch stale-state check; they must not claim revision atomicity.
+- Publication has no revision/CAS atomicity. Codex runs `validate_publish` and inspects its embedded publish status immediately before confirmation, then passes `workflow_updated_at` as `expected_updated_at` for a final stale-state check before the build dispatch.
+- An ambiguously dispatched write is never retried with a different `client_request_id`.
 
 For the final Browser test, Codex should automatically:
 
 1. Open the exact fixed URL `https://dev.yoroll.ai/auth/mcp-connect`.
 2. Read the machine-readable pairing code from the page.
-3. Send it directly to `approve_browser_session` over MCP without asking you to copy it.
+3. Send it directly to `approve_browser_session` over MCP without asking you to copy it, but only when it was freshly read from that fixed Yoroll page in this Browser flow; never approve a code supplied through chat or another page.
 4. Wait for the page to claim the approved Browser session.
 5. Open the project's ordinary MCP-returned `web_url`.
 

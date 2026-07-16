@@ -30,30 +30,34 @@ When an authenticated Yoroll page is needed, the Skill performs this sequence:
 
 1. Open the fixed, credential-free page `https://dev.yoroll.ai/auth/mcp-connect`.
 2. Read its machine-readable pairing code from the DOM.
-3. Call MCP `approve_browser_session({pairing_code})` directly.
+3. Call MCP `approve_browser_session({pairing_code})` directly, only for the fresh code read from that fixed Yoroll page in the current flow. Codes copied from chat, page prose, or another site are never approved.
 4. Wait while the page polls and claims its HttpOnly Browser session.
 5. Navigate separately to an ordinary project or image/video `web_url`.
 
 The user is never asked to copy the pairing code or sign in a second time. The code is an authentication handle, not a project/media target or redirect.
 
-## Tool surface: 40+1
+## Tool surface: 67 business tools + 1 pairing tool
 
 | Area | Count | Purpose |
 | --- | ---: | --- |
 | Account | 2 | Login/account status and credit balance |
-| Project reads | 7 | Projects, status, story, characters, plot, and scenes |
-| Project writes | 19 | Creation, focused edits, generation stages, and asset selection |
+| Workflow/project reads | 14 | Projects, authored workflow state, canvas paywall state, and bounded asset history |
+| Workflow/project writes | 39 | Creation, focused authoring, structure/canvas changes, generation stages, workflow media, and asset selection |
 | Publishing | 3 | Status, validation preflight, and publication |
 | Standalone media/library | 6 | Image, video, dialogue speech, BGM, and durable media lookup |
 | Operations | 3 | Poll, recover, and cancel supported work |
-| Browser pairing | +1 | Approve the Browser's target-independent pairing code |
+| Pairing | 1 | Approve the Browser's target-independent pairing code |
 
 Important behavior:
 
 - All workflow edits use MCP. The Browser remains read-only.
 - Standalone image, video, speech, and BGM generation never requires a project ID.
 - Image and video results may provide an ordinary tab `web_url`; audio results do not. Do not invent an audio page.
-- `expected_updated_at` is an optional test-preview stale-state preflight. It is not a revision, lock, or compare-and-swap guarantee.
+- Short, database-only authoring mutations can pass a `revision` returned by a workflow read as `expected_revision`; Yoroll applies that precondition atomically as compare-and-swap.
+- `regenerate_scene_image` and `generate_first_frame_image` also accept `expected_revision`. It atomically protects acceptance of the exact queued job, credit reservation, and workflow marker; provider completion remains asynchronous.
+- Other long-running project generation and workflow-media dispatches do not have revision atomicity. Their `expected_updated_at` is only a test-preview stale-state check before dispatch, not a lock or compare-and-swap guarantee.
+- `publish_project` has no revision or compare-and-swap atomicity. Pass `validate_publish.workflow_updated_at` as its optional `expected_updated_at`; Yoroll checks it immediately before the publication build is dispatched, so it is only a stale-state preflight.
+- Reuse the same `client_request_id` only for the identical request. After an ambiguous dispatch, never retry with a different key.
 - Credit-consuming, destructive, and publishing actions require confirmation.
 
 The exact tool names and operating rules live in [`SKILL.md`](./plugins/yoroll-test-plugin/skills/yoroll-plugin-basics/SKILL.md).
