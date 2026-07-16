@@ -80,6 +80,20 @@ For the final Browser test, Codex should automatically:
 4. Wait for the page to claim the approved Browser session.
 5. Open the project's ordinary MCP-returned `web_url`.
 
+Run this acceptance test in a new task in the Codex desktop app with the built-in Browser enabled. The built-in Browser is scoped to its desktop task and is not available to `codex exec`, so a CLI task cannot substitute for this test.
+
+Use this read-only acceptance prompt:
+
+```text
+先用 Yoroll MCP 的 get_account 确认登录；再用 @Browser 打开
+https://dev.yoroll.ai/auth/mcp-connect，读取页面生成的 pairing code，
+仅把它传给 approve_browser_session，等待同一页面进入登录态。
+最后用 MCP 调用 list_projects，并只读确认 Browser 已登录。
+不要创建、修改或发布项目，也不要调用付费工具。
+```
+
+The test passes only if MCP is already authenticated, the user is not asked to sign in again or relay the pairing code, the Browser reaches an authenticated `dev.yoroll.ai` page, and all business actions remain read-only.
+
 ## Preview configuration check
 
 The installed `.mcp.json` must contain:
@@ -134,3 +148,5 @@ This preview is an MCP plugin and therefore ships `.mcp.json`. A future Hosted A
 ### Browser does not become signed in
 
 This is a Browser-first pairing failure, not a request for another manual login. Keep MCP connected, reload the fixed `/auth/mcp-connect` page to create a fresh pairing code, and let the Skill call `approve_browser_session` again. Do not copy the code into chat, reuse an expired code, or edit the workflow through Browser clicks.
+
+Perform this check in a new Codex desktop task. If the Browser is unavailable there, confirm the built-in Browser plugin is enabled, restart the desktop app, and start another new task. Do not retry through `codex exec` or connect to internal Browser sockets manually.
