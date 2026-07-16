@@ -1,6 +1,6 @@
 ---
 name: yoroll-plugin-basics
-description: Create, inspect, and edit Yoroll projects with the authenticated Yoroll MCP server; generate standalone images, videos, dialogue speech, and background music; publish projects; and pair Codex's built-in browser without a second login. Use for Yoroll, interactive-game, workflow, project, image/video generation, TTS, BGM, publish, or authenticated Yoroll page requests. MCP performs every business edit; the Browser is read-only.
+description: Create, inspect, and edit Yoroll projects with the authenticated Yoroll MCP server; generate standalone images, videos, dialogue speech, and background music; publish projects; and pair Codex's built-in browser without a second login. Use when the user explicitly asks for Yoroll, is already working in a Yoroll project or workflow, or requests a Yoroll-specific account, media, publishing, or authenticated Browser action. Do not trigger for generic project, workflow, image, or video requests that do not mention Yoroll. MCP performs every business edit; the Browser is read-only.
 ---
 
 # Yoroll MCP workflows

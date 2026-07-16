@@ -1,6 +1,6 @@
 {
   "name": "yoroll-test-plugin",
-  "version": "0.2.0+codex.20260716014543",
+  "version": "0.2.0+codex.20260716024448",
   "description": "Use Yoroll's OAuth MCP tools and pair a read-only Browser without signing in twice.",
   "author": {
     "name": "Yoroll Developer Preview",
