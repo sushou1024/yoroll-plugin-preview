@@ -85,7 +85,15 @@ codex plugin marketplace upgrade ennio-yoroll-preview
 codex plugin add yoroll-test-plugin@ennio-yoroll-preview
 ```
 
-Restart the Codex desktop app and start a new task after installation or update. OAuth is requested during installation. Never paste Yoroll credentials, consent codes, or tokens into chat.
+Before PR #1 is merged, reviewers must replace `--ref main` with `--ref codex/mcp-ready-preview`; `main` still installs the earlier browser-only preview.
+
+Restart the Codex desktop app and start a new task after installation or update. Codex may start OAuth during installation or first use. If `codex mcp list` shows Yoroll as not logged in, run:
+
+```bash
+codex mcp login yoroll
+```
+
+Complete sign-in and consent only in the trusted Yoroll browser page. Never paste Yoroll credentials, consent codes, or tokens into chat.
 
 See [INSTALL.md](./INSTALL.md) for verification and troubleshooting.
 

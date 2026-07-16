@@ -16,7 +16,15 @@ codex plugin marketplace add \
 codex plugin add yoroll-test-plugin@ennio-yoroll-preview
 ```
 
-The marketplace policy is `authentication: ON_INSTALL`. Complete credentials and consent only on the trusted Yoroll OAuth page. The plugin requests this single consent bundle:
+Before PR #1 is merged, reviewers must replace `--ref main` with `--ref codex/mcp-ready-preview`; `main` still installs the earlier browser-only preview.
+
+The marketplace policy is `authentication: ON_INSTALL`, but the CLI may defer OAuth until first use. If `codex mcp list` shows Yoroll as not logged in, run:
+
+```bash
+codex mcp login yoroll
+```
+
+Complete credentials and consent only on the trusted Yoroll OAuth page. The plugin requests this single consent bundle:
 
 ```text
 account:read credits:read projects:read projects:write
@@ -121,7 +129,7 @@ This preview is an MCP plugin and therefore ships `.mcp.json`. A future Hosted A
 
 - Confirm `https://mcp.yoroll.ai/healthz` is healthy.
 - Confirm the OAuth page belongs to `mcp.yoroll.ai` or the configured Yoroll test login origin.
-- Disconnect and reconnect the Yoroll MCP entry. Do not copy tokens as a workaround.
+- Run `codex mcp login yoroll` and complete the browser flow. If it still fails, disconnect and reconnect the Yoroll MCP entry. Do not copy tokens as a workaround.
 
 ### Browser does not become signed in
 
