@@ -1,36 +1,39 @@
 {
   "name": "yoroll-test-plugin",
-  "version": "0.1.0+codex.20260714023223",
-  "description": "Open Yoroll in Codex and guide browser-based interactive game workflows.",
+  "version": "0.2.0+codex.20260716122646",
+  "description": "Use Yoroll's OAuth MCP tools and pair a read-only Browser without signing in twice.",
   "author": {
     "name": "Yoroll Developer Preview",
-    "url": "https://app.yoroll.ai"
+    "url": "https://dev.yoroll.ai"
   },
-  "homepage": "https://app.yoroll.ai",
+  "homepage": "https://dev.yoroll.ai",
   "repository": "https://github.com/sushou1024/yoroll-plugin-preview",
   "keywords": [
     "yoroll",
     "workflow",
     "game-creation",
-    "browser",
+    "mcp",
     "preview"
   ],
   "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "Yoroll Workflow Preview",
-    "shortDescription": "Open Yoroll and start a browser-based workflow",
-    "longDescription": "A developer preview for opening Yoroll in the built-in browser, completing sign-in securely, explaining the game-creation workflow, and assisting with visible website actions. This version intentionally contains no Yoroll MCP server.",
+    "displayName": "Yoroll MCP Preview",
+    "shortDescription": "Create workflows and media with Yoroll MCP",
+    "longDescription": "A test-environment preview with 67 account, workflow, publishing, media, and operation tools plus one Browser-session pairing tool. Create and edit workflow structure and canvas state through OAuth MCP, inspect asset history, generate standalone media without a project, and view signed-in Yoroll pages in Codex's read-only Browser without a second login.",
     "developerName": "Yoroll Developer Preview",
     "category": "Design",
     "capabilities": [
       "Read",
       "Write"
     ],
-    "websiteURL": "https://app.yoroll.ai",
+    "websiteURL": "https://dev.yoroll.ai",
+    "privacyPolicyURL": "https://docs.yoroll.ai/yoroll-privacy-policy",
+    "termsOfServiceURL": "https://docs.yoroll.ai/yoroll-terms-of-use",
     "defaultPrompt": [
-      "Open Yoroll and show me what I can create",
-      "Start a Yoroll Workflow in the built-in browser",
-      "Help me create an interactive game with Yoroll"
+      "Create an interactive game with Yoroll",
+      "Show my Yoroll projects and continue one",
+      "Generate a standalone image or video with Yoroll"
     ],
     "brandColor": "#FF8652",
     "composerIcon": "./assets/logo.png",

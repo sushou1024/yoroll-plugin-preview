@@ -1,4 +1,12 @@
 interface:
   display_name: "Yoroll"
-  short_description: "Create interactive games with Yoroll"
-  default_prompt: "Use $yoroll-plugin-basics to open Yoroll and briefly explain what it can do."
+  short_description: "Create and inspect Yoroll projects with MCP"
+  default_prompt: "Use $yoroll-plugin-basics to create or continue a Yoroll project with MCP and show it in the read-only Browser."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "yoroll"
+      description: "Yoroll OAuth MCP server"
+      transport: "streamable_http"
+      url: "https://mcp.yoroll.ai/mcp"

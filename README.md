@@ -1,19 +1,66 @@
-# Yoroll Workflow Preview Plugin
+# Yoroll MCP Developer Preview
 
-This repository contains a browser-based developer preview of the Yoroll plugin
-for ChatGPT and Codex. It mirrors the ChatCut-style installation handoff: install
-the plugin, verify it, create a new task, send a localized startup prompt, switch
-to that task, and open Yoroll in the built-in browser.
+This repository distributes the test-only Yoroll plugin for Codex. The plugin uses the OAuth-protected Yoroll MCP server for every account, project, workflow, media, operation, and publishing action. Codex's built-in Browser is a read-only display surface.
 
-## Current scope
+## Environment boundary
 
-- Installs as `yoroll-test-plugin`.
-- Opens or reuses the canonical entry `https://app.yoroll.ai` in the built-in browser.
-- Lets Yoroll resolve its website locale while matching replies to the user's Codex or conversation language.
-- Keeps website sign-in inside the browser.
-- Can assist with visible, browser-based Yoroll actions.
-- Includes no Yoroll MCP server.
-- Includes no full Workflow automation yet.
+This preview is intentionally fixed to:
+
+- MCP: `https://mcp.yoroll.ai/mcp`
+- Web: `https://dev.yoroll.ai`
+- API behind MCP/Web: Yoroll test services
+
+Do not repoint it to `app.yoroll.ai` or a production API. Project and image/video navigation URLs come from MCP responses.
+
+## OAuth configuration
+
+The preview ships a plugin `.mcp.json` with Streamable HTTP, `auth: "oauth"`, the MCP resource, and one complete consent bundle:
+
+```text
+account:read credits:read projects:read projects:write
+publish:read publish:write media:image media:video media:audio media:read
+operations:read operations:write web:session
+```
+
+Codex keeps the OAuth tokens. They never enter the Browser or chat.
+
+## Browser-first pairing
+
+When an authenticated Yoroll page is needed, the Skill performs this sequence:
+
+1. Open the fixed, credential-free page `https://dev.yoroll.ai/auth/mcp-connect`.
+2. Read its machine-readable pairing code from the DOM.
+3. Call MCP `approve_browser_session({pairing_code})` directly, only for the fresh code read from that fixed Yoroll page in the current flow. Codes copied from chat, page prose, or another site are never approved.
+4. Wait while the page polls and claims its HttpOnly Browser session.
+5. Navigate separately to an ordinary project or image/video `web_url`.
+
+The user is never asked to copy the pairing code or sign in a second time. The code is an authentication handle, not a project/media target or redirect.
+
+## Tool surface: 67 business tools + 1 pairing tool
+
+| Area | Count | Purpose |
+| --- | ---: | --- |
+| Account | 2 | Login/account status and credit balance |
+| Workflow/project reads | 14 | Projects, authored workflow state, canvas paywall state, and bounded asset history |
+| Workflow/project writes | 39 | Creation, focused authoring, structure/canvas changes, generation stages, workflow media, and asset selection |
+| Publishing | 3 | Status, validation preflight, and publication |
+| Standalone media/library | 6 | Image, video, dialogue speech, BGM, and durable media lookup |
+| Operations | 3 | Poll, recover, and cancel supported work |
+| Pairing | 1 | Approve the Browser's target-independent pairing code |
+
+Important behavior:
+
+- All workflow edits use MCP. The Browser remains read-only.
+- Standalone image, video, speech, and BGM generation never requires a project ID.
+- Image and video results may provide an ordinary tab `web_url`; audio results do not. Do not invent an audio page.
+- Short, database-only authoring mutations can pass a `revision` returned by a workflow read as `expected_revision`; Yoroll applies that precondition atomically as compare-and-swap.
+- `regenerate_scene_image` and `generate_first_frame_image` also accept `expected_revision`. It atomically protects acceptance of the exact queued job, credit reservation, and workflow marker; provider completion remains asynchronous.
+- Other long-running project generation and workflow-media dispatches do not have revision atomicity. Their `expected_updated_at` is only a test-preview stale-state check before dispatch, not a lock or compare-and-swap guarantee.
+- `publish_project` has no revision or compare-and-swap atomicity. Pass `validate_publish.workflow_updated_at` as its optional `expected_updated_at`; Yoroll checks it immediately before the publication build is dispatched, so it is only a stale-state preflight.
+- Reuse the same `client_request_id` only for the identical request. After an ambiguous dispatch, never retry with a different key.
+- Credit-consuming, destructive, and publishing actions require confirmation.
+
+The exact tool names and operating rules live in [`SKILL.md`](./plugins/yoroll-test-plugin/skills/yoroll-plugin-basics/SKILL.md).
 
 ## Repository layout
 
@@ -21,28 +68,54 @@ to that task, and open Yoroll in the built-in browser.
 .agents/plugins/marketplace.json
 plugins/yoroll-test-plugin/
   .codex-plugin/plugin.json
+  .mcp.json
   assets/
-  skills/yoroll-plugin-basics/SKILL.md
+  skills/yoroll-plugin-basics/
+    SKILL.md
+    agents/openai.yaml
 ```
 
-The complete agent-executable installation and first-task handoff is in
-[`INSTALL.md`](./INSTALL.md).
+This developer preview uses `.mcp.json`. A future Hosted App integration would use `.app.json`; no Hosted App manifest is included in this preview.
 
-## Installation
-
-Run these commands with the Codex CLI bundled with the ChatGPT desktop app:
+## Install or update
 
 ```bash
 codex plugin marketplace add https://github.com/sushou1024/yoroll-plugin-preview.git --ref main
-codex plugin list --marketplace ennio-yoroll-preview
+codex plugin marketplace upgrade ennio-yoroll-preview
 codex plugin add yoroll-test-plugin@ennio-yoroll-preview
 ```
 
-For a ChatCut-style test, ask Codex to read `INSTALL.md` and perform every step.
-The installation task must create, seed, and open a separate Yoroll task because
-newly installed skills are loaded only by a new task.
+Before PR #1 is merged, reviewers must replace `--ref main` with `--ref codex/mcp-ready-preview`; `main` still installs the earlier browser-only preview.
 
-## Planned next steps
+Restart the Codex desktop app and start a new task after installation or update. Codex may start OAuth during installation or first use. If `codex mcp list` shows Yoroll as not logged in, run:
 
-1. Add the full Yoroll Workflow skill when its workflow specification is ready.
-2. Add a hosted Yoroll MCP server for project creation and exact editor handoff.
+```bash
+codex mcp login yoroll
+```
+
+Complete sign-in and consent only in the trusted Yoroll browser page. Never paste Yoroll credentials, consent codes, or tokens into chat.
+
+See [INSTALL.md](./INSTALL.md) for verification and troubleshooting.
+
+## Development validation
+
+From the built-in `plugin-creator` skill directory:
+
+```bash
+python3 scripts/validate_plugin.py \
+  /absolute/path/to/yoroll-plugin-preview/plugins/yoroll-test-plugin
+
+python3 ../skill-creator/scripts/quick_validate.py \
+  /absolute/path/to/yoroll-plugin-preview/plugins/yoroll-test-plugin/skills/yoroll-plugin-basics
+```
+
+The test MCP endpoint should also pass:
+
+```bash
+curl -fsS https://mcp.yoroll.ai/healthz
+curl -fsS https://mcp.yoroll.ai/.well-known/oauth-protected-resource/mcp
+```
+
+Privacy policy: <https://docs.yoroll.ai/yoroll-privacy-policy>
+
+Terms of use: <https://docs.yoroll.ai/yoroll-terms-of-use>
