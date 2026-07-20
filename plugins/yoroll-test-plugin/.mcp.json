@@ -17,8 +17,7 @@
         "media:audio",
         "media:read",
         "operations:read",
-        "operations:write",
-        "web:session"
+        "operations:write"
       ]
     }
   }
