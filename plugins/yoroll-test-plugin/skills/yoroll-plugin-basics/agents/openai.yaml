@@ -1,7 +1,7 @@
 interface:
   display_name: "Yoroll"
-  short_description: "Choose, create, and edit with Yoroll MCP"
-  default_prompt: "Use $yoroll-plugin-basics to show Yoroll's public creation cards or continue a Yoroll project, requesting OAuth only when a protected MCP tool is called."
+  short_description: "Keep Yoroll visible and create with MCP cards"
+  default_prompt: "Use $yoroll-plugin-basics to open and keep the Yoroll DEV workspace visible, show its public creation card, and keep the user-facing reply free of internal narration."
 
 dependencies:
   tools:

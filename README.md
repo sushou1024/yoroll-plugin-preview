@@ -1,69 +1,99 @@
 # Yoroll MCP Developer Preview
 
-This repository distributes the test-only Yoroll plugin for Codex. It provides
-two anonymous MCP App cards for choosing and configuring a creation, then uses
-Yoroll's existing OAuth-protected MCP business tools for all account, project,
-workflow, media, operation, and publishing actions.
+This repository distributes the test-only Yoroll plugin for Codex. It combines
+an agent-assisted first-run handoff, Codex's built-in Browser as a visible DEV
+workspace, two anonymous MCP creation cards, and Yoroll's OAuth-protected MCP
+business tools.
 
-## Architecture
+## Target experience
 
-The interaction is intentionally split into three layers:
+1. A Codex task reads `INSTALL.md`, installs or updates the plugin, and opens a
+   localized `Create with Yoroll` task in the same project or workspace.
+2. The installed Skill opens or reuses `https://dev.yoroll.ai` in Codex's
+   in-app Browser, explicitly keeps the Browser visible, and preserves the DEV
+   tab as the user-facing deliverable.
+3. The same turn displays one short welcome paragraph and the anonymous creation
+   menu, without a repeated explanation below the card.
+4. `render_creation_menu` offers interactive film game, image, video, and other
+   request without starting OAuth.
+5. Selecting interactive game, image, or video, and returning to the menu,
+   navigate silently through a direct app-to-MCP tool call or same-widget
+   transition. These actions must not post a follow-up user message or trigger
+   a host confirmation dialog.
+6. `render_creation_form` loads the current model, genre, style, format, and
+   generation settings for the selected intent. The card is the complete
+   response; Codex does not append login, creation, or credit-status narration.
+7. The card submits directly to `create_project`, `generate_image`, or
+   `generate_video`. OAuth begins only when that protected business tool is
+   called.
+8. After submission, the card sends a follow-up message containing the returned
+   operation ID. That new model turn lets Codex poll the operation and open the
+   exact MCP-returned `web_url` in the existing Yoroll DEV tab.
 
-1. `render_creation_menu` shows interactive game, image, video, and other request.
-2. `render_creation_form` shows the current test-environment settings for one
-   explicit intent. Model capabilities come from the MCP server rather than the
-   Skill.
-3. The card submits to `create_project`, `generate_image`, or `generate_video`.
-   Those existing tools remain the only business implementation and trigger
-   OAuth when required.
+Dialogue speech and background music are not advertised or routed in this
+preview's first-run experience.
 
-The plugin does not define a generic submit tool, pair a Browser, or automate
-the Yoroll platform frontend. Existing workflow tools, operation semantics,
-revision checks, idempotency keys, credit confirmation, and publishing rules
-remain unchanged.
+## Architecture boundaries
+
+- **Installer:** installs the bundle, verifies MCP, creates and opens a new task.
+- **Skill:** resolves runtime language, opens the DEV workspace, routes intent,
+  coordinates cards, OAuth continuation, operation polling, and visible handoff.
+- **MCP cards:** collect anonymous creation intent and detailed settings.
+- **Protected MCP tools:** own every account, project, workflow, media,
+  operation, and publishing action.
+- **Browser:** displays Yoroll but never replaces MCP with frontend automation.
+
+The plugin does not define a generic submit endpoint, copy Browser cookies into
+MCP, use `/auth/mcp-connect`, or request the legacy `web:session` scope.
 
 ## Environment boundary
 
 This preview is fixed to:
 
 - MCP: `https://mcp.yoroll.ai/mcp`
-- Web links returned by tools: `https://dev.yoroll.ai`
+- Web: `https://dev.yoroll.ai`
 - API behind MCP: Yoroll test services
 
-Do not repoint it to `app.yoroll.ai`, `api.lineargame.ai`, or any production
-origin.
+Do not repoint it to `app.yoroll.ai`, `api.lineargame.ai`, or a production
+origin. Open only ordinary `web_url` values returned by the test MCP.
 
 ## Authentication boundary
 
 The marketplace policy is `authentication: ON_USE`.
 
 - Public: `render_creation_menu`, `render_creation_form`.
-- OAuth-protected: account, credits, project, workflow, media generation,
-  operation, and publishing tools.
-- No Browser pairing scope is requested.
+- OAuth-protected: account, credits, project, workflow, image/video generation,
+  operations, and publishing.
+- Browser login state is not treated as proof of MCP authorization.
 
-Invalid supplied bearer tokens still fail. Anonymous access applies only when
-no bearer is supplied and never bypasses tool-level authorization.
+Credentials, verification codes, cookies, and OAuth tokens never belong in
+chat or Skill context.
 
-## Repository layout
+## Installation
+
+Ask Codex desktop to execute the installer:
 
 ```text
-.agents/plugins/marketplace.json
-plugins/yoroll-test-plugin/
-  .codex-plugin/plugin.json
-  .mcp.json
-  assets/
-  skills/yoroll-plugin-basics/SKILL.md
+Read the complete INSTALL.md in the Yoroll plugin repository, install or update
+the Yoroll preview plugin, and open the new creation task for me.
 ```
 
-## Install and validate
+Chinese:
 
-See [INSTALL.md](./INSTALL.md) for installation and the end-to-end acceptance
-test.
+```text
+完整阅读 Yoroll 插件仓库里的 INSTALL.md，安装或更新 Yoroll 预览插件，并为我打开新的创作任务。
+```
 
-During development, refresh the plugin cachebuster and validate both the plugin
-and Skill with the bundled `plugin-creator` and `skill-creator` scripts before
-publishing a preview update.
+The complete execution and fallback contract is in [INSTALL.md](./INSTALL.md).
+
+## Development validation
+
+After changing the plugin:
+
+1. Refresh its Codex cachebuster with the bundled `plugin-creator` helper.
+2. Validate the Skill with `skill-creator/scripts/quick_validate.py`.
+3. Validate the bundle with `plugin-creator/scripts/validate_plugin.py`.
+4. Reinstall the plugin and test from a new Codex task.
 
 Privacy policy: <https://docs.yoroll.ai/yoroll-privacy-policy>
 
