@@ -126,11 +126,15 @@ HTTP call.
   details in commentary while rendering a public card.
 
 After a component-initiated business call returns an operation ID, continue
-polling only in a new model turn explicitly triggered by the card's follow-up
-message. Never imply that Codex is tracking the operation merely because the
-component received the `callTool` result. If no follow-up turn arrives, report a
-component-continuation failure when the user asks; do not submit the business
-tool again with a new idempotency key.
+polling only in a new model turn triggered by exactly one app-authored
+`ui/message` continuation. The component must enqueue that message silently
+through the MCP Apps bridge; it must not use the host's confirmation-based
+follow-up API. Treat the continuation as a receipt for an already accepted
+operation: call `get_operation` with the returned ID and never submit the
+business tool again. Never imply that Codex is tracking merely because the
+component received the `callTool` result. If no continuation turn arrives,
+report a component-continuation failure when the user asks and preserve the
+operation ID for recovery.
 
 ## Authentication
 

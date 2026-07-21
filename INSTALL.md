@@ -8,8 +8,9 @@ printing commands.
 
 Installation is complete only when all of the following are true:
 
-1. The `ennio-yoroll-preview` marketplace is configured from the exact local
-   workspace `/Users/ennio/xxx/yoroll-plugin`.
+1. The `ennio-yoroll-preview` marketplace is configured from either the local
+   checkout that contains this file or the canonical Git repository at
+   `https://github.com/sushou1024/yoroll-plugin-preview.git` on `main`.
 2. `yoroll-test-plugin@ennio-yoroll-preview` is installed and enabled.
 3. Yoroll MCP is enabled at `https://mcp.yoroll.ai/mcp`.
 4. A new task is created in the same Codex project or workspace, seeded with the
@@ -33,13 +34,18 @@ Use the Codex CLI bundled with the desktop app for every command:
 
 Do not substitute a Homebrew, npm, or unrelated `codex` executable.
 
-## Local source
+## Marketplace source
 
-Use this local marketplace root and no other source:
+Prefer the local checkout when this file is available on the host filesystem.
+Run `git rev-parse --show-toplevel` with the directory containing this
+`INSTALL.md` as the working directory, and use the returned absolute path as
+`REPO_ROOT`. Confirm that both `INSTALL.md` and
+`.agents/plugins/marketplace.json` exist under that root. Never guess a home
+directory, username, or checkout path.
 
-```text
-/Users/ennio/xxx/yoroll-plugin
-```
+If this file is not in a local Git checkout, use the canonical Git source
+`https://github.com/sushou1024/yoroll-plugin-preview.git` with ref `main`.
+These are the only two supported source modes.
 
 ## Install or update
 
@@ -49,17 +55,27 @@ Inspect the configured marketplaces first:
 "/Applications/ChatGPT.app/Contents/Resources/codex" plugin marketplace list --json
 ```
 
-If `ennio-yoroll-preview` is already configured from the exact local workspace,
-reuse it. If that name points somewhere else, remove the installed Yoroll plugin
-when present, remove only that marketplace entry, and then add the local root.
-Do not remove or rewrite unrelated marketplaces.
+If `ennio-yoroll-preview` already points to the selected source mode, reuse it.
+If that name points somewhere else, remove the installed Yoroll plugin when
+present, remove only that marketplace entry, and then add the selected source.
+Do not remove or rewrite unrelated marketplaces. For an existing Git source,
+refresh it with `plugin marketplace upgrade` before reinstalling.
+
+For a local checkout, substitute the resolved absolute path for `$REPO_ROOT`:
 
 ```bash
 "/Applications/ChatGPT.app/Contents/Resources/codex" plugin marketplace add \
-  /Users/ennio/xxx/yoroll-plugin
+  "$REPO_ROOT"
 ```
 
-Install or refresh the plugin from that local marketplace:
+When no local checkout exists, add the canonical Git source:
+
+```bash
+"/Applications/ChatGPT.app/Contents/Resources/codex" plugin marketplace add \
+  https://github.com/sushou1024/yoroll-plugin-preview.git --ref main
+```
+
+Install or refresh the plugin from the selected marketplace:
 
 ```bash
 "/Applications/ChatGPT.app/Contents/Resources/codex" plugin add \
@@ -73,10 +89,11 @@ Verify it with:
 "/Applications/ChatGPT.app/Contents/Resources/codex" mcp get yoroll
 ```
 
-The plugin must be installed and enabled with both `source.path` and
-`marketplaceSource.source` resolving under `/Users/ennio/xxx/yoroll-plugin`.
-Yoroll MCP must be enabled with Streamable HTTP at
-`https://mcp.yoroll.ai/mcp`. It may correctly report `Not logged in`;
+The plugin must be installed and enabled. In local mode, `source.path` and
+`marketplaceSource.source` must resolve under the discovered `REPO_ROOT`. In Git
+mode, `marketplaceSource.source` must identify the canonical repository and the
+configured ref must be `main`. Yoroll MCP must be enabled with Streamable HTTP
+at `https://mcp.yoroll.ai/mcp`. It may correctly report `Not logged in`;
 authentication is intentionally deferred until first protected use.
 
 ## Resolve the first-run language
@@ -169,9 +186,11 @@ The installed Skill must:
    automation fallback.
 8. After a successful project, image, or video operation returns a `web_url`,
    open that exact DEV URL in the existing Yoroll tab.
-9. Require the settings card to send a follow-up message after its protected
-   `callTool` returns an operation ID. That follow-up starts the model turn that
-   polls `get_operation`; a component result alone is not a tracking loop.
+9. Require the settings card to enqueue exactly one silent continuation through
+   the MCP Apps `ui/message` bridge after its protected `callTool` returns an
+   operation ID. That continuation starts the model turn that polls
+   `get_operation`; it must not use the confirmation-based host follow-up API or
+   resubmit the protected business tool.
 10. On any later anonymous menu or detailed-form render, treat the card as the
     complete response and add no assistant text below it. Do not restate the
     selected type or report that the user is not logged in, no content was
