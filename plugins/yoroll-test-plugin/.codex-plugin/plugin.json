@@ -1,6 +1,6 @@
 {
   "name": "yoroll-test-plugin",
-  "version": "0.2.0+codex.20260721085301",
+  "version": "0.2.0+codex.20260721131437",
   "description": "Keep the Yoroll DEV workspace visible, choose a creation in public MCP cards, and sign in only when a protected operation starts.",
   "author": {
     "name": "Yoroll Developer Preview",

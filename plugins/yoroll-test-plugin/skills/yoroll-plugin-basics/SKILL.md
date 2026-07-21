@@ -108,6 +108,14 @@ Let the existing protected business tool enforce OAuth, credits, idempotency,
 and validation. Do not duplicate the business operation in Browser or another
 HTTP call.
 
+On submit, the component calls the protected business tool directly. It must
+not preflight with `get_account`. If that direct call returns the standard OAuth
+challenge, the component may put the exact pending tool name and arguments in
+`ui/update-model-context`, then enqueue one short natural-language `ui/message`
+asking Codex to connect Yoroll and continue. Never expose the arguments as JSON,
+tool instructions, or internal identifiers in the visible message, and never
+use `sendFollowUpMessage`.
+
 ### Public-card response contract
 
 - On installer-created first run, the creation-menu card plus the single
@@ -127,14 +135,17 @@ HTTP call.
 
 After a component-initiated business call returns an operation ID, continue
 polling only in a new model turn triggered by exactly one app-authored
-`ui/message` continuation. The component must enqueue that message silently
-through the MCP Apps bridge; it must not use the host's confirmation-based
-follow-up API. Treat the continuation as a receipt for an already accepted
-operation: call `get_operation` with the returned ID and never submit the
-business tool again. Never imply that Codex is tracking merely because the
-component received the `callTool` result. If no continuation turn arrives,
-report a component-continuation failure when the user asks and preserve the
-operation ID for recovery.
+`ui/message` continuation. The component must first place the operation receipt
+and polling rules in model-only `ui/update-model-context`, then enqueue one short
+natural-language message through the MCP Apps bridge. It must not expose the
+operation ID or tool instructions in that visible message, use the host's
+confirmation-based follow-up API, or resubmit the protected business tool.
+Treat the model-only receipt as an already accepted operation: call
+`get_operation` with the returned ID and never submit the business tool again.
+Never imply that Codex is tracking merely because the component received the
+`callTool` result. If no continuation turn arrives, report a
+component-continuation failure when the user asks and preserve the operation ID
+for recovery.
 
 ## Authentication
 
@@ -142,9 +153,10 @@ operation ID for recovery.
    standard authentication challenge.
 2. Reuse a valid authorization silently. Do not force a login check before an
    anonymous card.
-3. Continue the user's original selection after OAuth. Do not ask them to choose
-   the creation type or re-enter settings unless the host reports that the
-   protected call must be resubmitted.
+3. When model-only card context contains a pending protected request after an
+   OAuth challenge, call that tool with the exact saved arguments and stable
+   `client_request_id` after authorization. Do not echo the arguments, ask the
+   user to choose again, or ask them to re-enter settings.
 4. Never ask for a password, verification code, cookie, consent code, access
    token, or refresh token in chat.
 5. Do not open `/auth/mcp-connect`, call the legacy

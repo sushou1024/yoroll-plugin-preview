@@ -186,11 +186,12 @@ The installed Skill must:
    automation fallback.
 8. After a successful project, image, or video operation returns a `web_url`,
    open that exact DEV URL in the existing Yoroll tab.
-9. Require the settings card to enqueue exactly one silent continuation through
-   the MCP Apps `ui/message` bridge after its protected `callTool` returns an
-   operation ID. That continuation starts the model turn that polls
-   `get_operation`; it must not use the confirmation-based host follow-up API or
-   resubmit the protected business tool.
+9. Require the settings card to call the protected business tool directly,
+   without a `get_account` preflight. For OAuth continuation and accepted
+   operations, put exact machine data in model-only `ui/update-model-context`,
+   then enqueue one short natural-language `ui/message`. Never expose JSON,
+   tool instructions, or internal IDs in the visible message; do not use the
+   confirmation-based host follow-up API or resubmit an accepted operation.
 10. On any later anonymous menu or detailed-form render, treat the card as the
     complete response and add no assistant text below it. Do not restate the
     selected type or report that the user is not logged in, no content was
@@ -218,6 +219,9 @@ Do not report success before the task is seeded and open.
 The marketplace uses `authentication: ON_USE`. `render_creation_menu` and
 `render_creation_form` must remain anonymous. Let Codex handle Yoroll OAuth only
 when the first protected tool returns its standard authentication challenge.
+After authorization, resume the exact pending request from model-only card
+context with the same `client_request_id`; do not ask the user to re-enter card
+settings.
 
 Never ask the user to paste a password, verification code, cookie, consent code,
 access token, or refresh token into chat. Do not open `/auth/mcp-connect`, request
