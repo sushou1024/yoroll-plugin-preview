@@ -27,13 +27,11 @@ business tools.
 7. The card submits directly to `create_project`, `generate_image`, or
    `generate_video`. OAuth begins only when that protected business tool is
    called.
-8. OAuth retry arguments and accepted operation receipts are stored in
-   `modelContent.yorollContinuation` and optionally mirrored through
-   `ui/update-model-context`. The card posts only a short natural `ui/message`
-   through a JSON-RPC request, so visible conversation never contains raw JSON,
-   tool instructions, or operation IDs. The new model turn resumes OAuth or
-   polls `get_operation`, then opens the exact returned `web_url` in the
-   existing DEV tab.
+8. Protected submissions use ChatGPT's model-equivalent
+   `window.openai.callTool` path. The protected tool's standard OAuth challenge
+   opens the host linking flow directly from the same button click; the card
+   never posts a follow-up message or technical JSON. A stable idempotency key
+   is kept in private widget state across an OAuth remount.
 
 Dialogue speech and background music are not advertised or routed in this
 preview's first-run experience.
@@ -42,7 +40,7 @@ preview's first-run experience.
 
 - **Installer:** installs the bundle, verifies MCP, creates and opens a new task.
 - **Skill:** resolves runtime language, opens the DEV workspace, routes intent,
-  coordinates cards, OAuth continuation, operation polling, and visible handoff.
+  coordinates cards, later operation polling, and visible handoff.
 - **MCP cards:** collect anonymous creation intent and detailed settings.
 - **Protected MCP tools:** own every account, project, workflow, media,
   operation, and publishing action.

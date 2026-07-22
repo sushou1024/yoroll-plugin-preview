@@ -109,17 +109,12 @@ and validation. Do not duplicate the business operation in Browser or another
 HTTP call.
 
 On submit, the component calls the protected business tool directly. It must
-not preflight with `get_account`. If that direct call returns the standard OAuth
-challenge, the component must save the exact pending tool name and arguments in
-the model-visible widget-state field `modelContent.yorollContinuation`, may
-additionally send them through `ui/update-model-context` when the host supports
-it, and must then enqueue one short natural-language `ui/message` asking Codex
-to connect Yoroll and continue. Failure or absence of
-`ui/update-model-context` must not block that message. Never expose the
-arguments as JSON, tool instructions, or internal identifiers in the visible
-message. Send `ui/message` as a JSON-RPC request so the host posts it; do not
-send a notification that merely stages a composer attachment, and never use
-`sendFollowUpMessage`.
+not preflight with `get_account`. Use ChatGPT's model-equivalent
+`window.openai.callTool` path when available so the protected tool's standard
+OAuth challenge opens the host linking UI from the same user click. Preserve
+the stable `client_request_id` in private widget state across an OAuth remount.
+Never enqueue `ui/message`, call `sendFollowUpMessage`, expose the arguments as
+JSON or tool instructions, or ask the user to type a connection prompt.
 
 ### Public-card response contract
 
@@ -138,21 +133,12 @@ send a notification that merely stages a composer attachment, and never use
 - Do not narrate card routing, tool names, login policy, or implementation
   details in commentary while rendering a public card.
 
-After a component-initiated business call returns an operation ID, continue
-polling only in a new model turn triggered by exactly one app-authored
-`ui/message` continuation. The component must first place the operation receipt
-and polling rules in model-visible widget state, may additionally mirror them
-through `ui/update-model-context`, then enqueue one short natural-language
-message through the MCP Apps bridge. It must not expose the operation ID or tool
-instructions in that visible message, send `ui/message` as a notification, use
-the host's confirmation-based follow-up API, or resubmit the protected business
-tool.
-Treat the model-only receipt as an already accepted operation: call
-`get_operation` with the returned ID and never submit the business tool again.
-Never imply that Codex is tracking merely because the component received the
-`callTool` result. If no continuation turn arrives, report a
-component-continuation failure when the user asks and preserve the operation ID
-for recovery.
+After a component-initiated business call returns an operation ID, treat it as
+an already accepted operation and never submit the business tool again. Do not
+manufacture another conversation turn from the component. On a later explicit
+user request to continue or check status, call `get_operation` with that ID (or
+recover the operation from `list_operations`) and open its returned `web_url`
+after success.
 
 ## Authentication
 
@@ -160,11 +146,11 @@ for recovery.
    standard authentication challenge.
 2. Reuse a valid authorization silently. Do not force a login check before an
    anonymous card.
-3. When model-only card context, including widget-state
-   `modelContent.yorollContinuation`, contains a pending protected request after
-   an OAuth challenge, call that tool with the exact saved arguments and stable
-   `client_request_id` after authorization. Do not echo the arguments, ask the
-   user to choose again, or ask them to re-enter settings.
+3. Let the same card button's `window.openai.callTool` call carry the OAuth
+   challenge. Keep its stable `client_request_id` in private widget state so an
+   OAuth remount or a deliberate retry does not create a duplicate operation.
+   Do not echo the arguments, ask the user to choose again, or ask them to type
+   a connection prompt.
 4. Never ask for a password, verification code, cookie, consent code, access
    token, or refresh token in chat.
 5. Do not open `/auth/mcp-connect`, call the legacy

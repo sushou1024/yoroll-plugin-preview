@@ -193,15 +193,13 @@ The installed Skill must:
 8. After a successful project, image, or video operation returns a `web_url`,
    open that exact DEV URL in the existing Yoroll tab.
 9. Require the settings card to call the protected business tool directly,
-   without a `get_account` preflight. For OAuth continuation and accepted
-   operations, persist exact machine data in
-   `modelContent.yorollContinuation`, mirror it through
-   `ui/update-model-context` when supported, then enqueue one short
-   natural-language `ui/message`. Optional context-update support must never
-   block the message. Never expose JSON, tool instructions, or internal IDs in
-   the visible message. Send `ui/message` as a JSON-RPC request, not a
-   notification that only stages composer content; do not use the
-   confirmation-based host follow-up API or resubmit an accepted operation.
+   without a `get_account` preflight, through ChatGPT's model-equivalent
+   `window.openai.callTool` path when available. Let the protected tool's
+   standard OAuth challenge open the host linking UI from that same click.
+   Preserve the stable idempotency key in private widget state across an OAuth
+   remount. Never post an OAuth or operation follow-up message, expose JSON or
+   internal IDs in chat, use the confirmation-based follow-up API, or resubmit
+   an accepted operation.
 10. On any later anonymous menu or detailed-form render, treat the card as the
     complete response and add no assistant text below it. Do not restate the
     selected type or report that the user is not logged in, no content was
