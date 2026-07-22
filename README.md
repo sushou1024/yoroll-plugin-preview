@@ -27,11 +27,12 @@ business tools.
 7. The card submits directly to `create_project`, `generate_image`, or
    `generate_video`. OAuth begins only when that protected business tool is
    called.
-8. Protected submissions use ChatGPT's model-equivalent
-   `window.openai.callTool` path. The protected tool's standard OAuth challenge
-   opens the host linking flow directly from the same button click; the card
-   never posts a follow-up message or technical JSON. A stable idempotency key
-   is kept in private widget state across an OAuth remount.
+8. Protected submissions stay inside the silent MCP Apps `tools/call` bridge.
+   When the current Codex Mac host returns an OAuth challenge instead of opening
+   it automatically, the card opens the Yoroll plugin detail page, keeps the
+   form and stable idempotency key in private widget state, and retries the exact
+   request after the user completes Authenticate and returns. The card never
+   posts a follow-up message or technical JSON.
 
 Dialogue speech and background music are not advertised or routed in this
 preview's first-run experience.

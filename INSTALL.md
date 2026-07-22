@@ -193,13 +193,14 @@ The installed Skill must:
 8. After a successful project, image, or video operation returns a `web_url`,
    open that exact DEV URL in the existing Yoroll tab.
 9. Require the settings card to call the protected business tool directly,
-   without a `get_account` preflight, through ChatGPT's model-equivalent
-   `window.openai.callTool` path when available. Let the protected tool's
-   standard OAuth challenge open the host linking UI from that same click.
-   Preserve the stable idempotency key in private widget state across an OAuth
-   remount. Never post an OAuth or operation follow-up message, expose JSON or
-   internal IDs in chat, use the confirmation-based follow-up API, or resubmit
-   an accepted operation.
+   without a `get_account` preflight, through the silent MCP Apps `tools/call`
+   bridge. If the current Codex Mac host returns an OAuth challenge without
+   opening it, open `codex://plugins/yoroll-test-plugin`, keep the complete
+   pending request and stable idempotency key in private widget state, and retry
+   only after the user completes Authenticate and returns to the task. Never
+   post an OAuth or operation follow-up message, expose JSON or internal IDs in
+   chat, use the confirmation-based follow-up API, or resubmit an accepted
+   operation.
 10. On any later anonymous menu or detailed-form render, treat the card as the
     complete response and add no assistant text below it. Do not restate the
     selected type or report that the user is not logged in, no content was
@@ -229,11 +230,12 @@ The marketplace uses `authentication: ON_USE`. The plugin MCP configuration
 must not declare the whole server as OAuth-only or predeclare a global scope
 set. `render_creation_menu` and `render_creation_form` must remain anonymous.
 Let the server's per-tool `securitySchemes` and standard authentication
-challenge make Codex start Yoroll OAuth only when the first protected tool is
-called.
-After authorization, resume the exact pending request from model-only card
-context with the same `client_request_id`; do not ask the user to re-enter card
-settings.
+challenge mark the first protected call as requiring Yoroll OAuth. On Codex Mac,
+the card opens the installed Yoroll plugin detail page so the user can enter the
+host-owned Authenticate flow; it does not construct or handle an OAuth URL.
+After authorization, resume the exact pending request from private card state
+with the same `client_request_id`; do not ask the user to re-enter card settings
+or type a connection prompt.
 
 Never ask the user to paste a password, verification code, cookie, consent code,
 access token, or refresh token into chat. Do not open `/auth/mcp-connect`, request

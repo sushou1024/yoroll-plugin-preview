@@ -109,12 +109,13 @@ and validation. Do not duplicate the business operation in Browser or another
 HTTP call.
 
 On submit, the component calls the protected business tool directly. It must
-not preflight with `get_account`. Use ChatGPT's model-equivalent
-`window.openai.callTool` path when available so the protected tool's standard
-OAuth challenge opens the host linking UI from the same user click. Preserve
-the stable `client_request_id` in private widget state across an OAuth remount.
-Never enqueue `ui/message`, call `sendFollowUpMessage`, expose the arguments as
-JSON or tool instructions, or ask the user to type a connection prompt.
+not preflight with `get_account`. Keep the call inside the silent MCP Apps
+`tools/call` bridge. If Codex Mac returns the standard OAuth challenge without
+opening it, open `codex://plugins/yoroll-test-plugin`, preserve the full pending
+request and stable `client_request_id` in private widget state, and retry when
+the user returns after Authenticate. Never enqueue `ui/message`, call
+`sendFollowUpMessage`, expose the arguments as JSON or tool instructions, or
+ask the user to type a connection prompt.
 
 ### Public-card response contract
 
@@ -142,15 +143,16 @@ after success.
 
 ## Authentication
 
-1. Let Codex start Yoroll OAuth only when the first protected tool returns its
-   standard authentication challenge.
+1. Start the Yoroll connection flow only when the first protected tool returns
+   its standard authentication challenge. The current Codex Mac fallback opens
+   the installed Yoroll plugin detail page; the host still owns OAuth itself.
 2. Reuse a valid authorization silently. Do not force a login check before an
    anonymous card.
-3. Let the same card button's `window.openai.callTool` call carry the OAuth
-   challenge. Keep its stable `client_request_id` in private widget state so an
-   OAuth remount or a deliberate retry does not create a duplicate operation.
-   Do not echo the arguments, ask the user to choose again, or ask them to type
-   a connection prompt.
+3. Let the same card submission carry the OAuth challenge through the silent
+   MCP Apps bridge. Keep the full pending request and stable `client_request_id`
+   in private widget state so returning from Authenticate or a deliberate retry
+   does not create a duplicate operation. Do not echo the arguments, ask the
+   user to choose again, or ask them to type a connection prompt.
 4. Never ask for a password, verification code, cookie, consent code, access
    token, or refresh token in chat.
 5. Do not open `/auth/mcp-connect`, call the legacy
