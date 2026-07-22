@@ -111,10 +111,11 @@ HTTP call.
 On submit, the component calls the protected business tool directly. It must
 not preflight with `get_account`. Keep the call inside the silent MCP Apps
 `tools/call` bridge. If Codex Mac returns the standard OAuth challenge without
-opening it, open the portable installed Plugins surface at `codex://skills`,
-preserve the full pending request and stable `client_request_id` in private
-widget state, and retry when the user returns after selecting Yoroll and
-completing Authenticate. Never enqueue `ui/message`, call
+opening it, show a connection link to the portable installed Plugins surface at
+`codex://skills`, preserve the full pending request and stable
+`client_request_id` in private widget state, and retry when the user returns
+after following the link, selecting Yoroll, and completing Authenticate. Never
+enqueue `ui/message`, call
 `sendFollowUpMessage`, expose the arguments as JSON or tool instructions, or
 ask the user to type a connection prompt.
 
@@ -146,8 +147,8 @@ after success.
 
 1. Start the Yoroll connection flow only when the first protected tool returns
    its standard authentication challenge. The current Codex Mac fallback opens
-   the installed Plugins page, where the user selects Yoroll; the host still
-   owns OAuth itself.
+   a connection link to the installed Plugins page, where the user selects
+   Yoroll; the host still owns OAuth itself.
 2. Reuse a valid authorization silently. Do not force a login check before an
    anonymous card.
 3. Let the same card submission carry the OAuth challenge through the silent

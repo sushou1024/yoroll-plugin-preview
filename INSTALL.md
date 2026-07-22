@@ -195,10 +195,10 @@ The installed Skill must:
 9. Require the settings card to call the protected business tool directly,
    without a `get_account` preflight, through the silent MCP Apps `tools/call`
    bridge. If the current Codex Mac host returns an OAuth challenge without
-   opening it, open the portable installed Plugins surface at `codex://skills`,
-   keep the complete pending request and stable idempotency key in private
-   widget state, and retry only after the user selects Yoroll, completes
-   Authenticate, and returns to the task. Never
+   opening it, show a connection link to the portable installed Plugins surface
+   at `codex://skills`, keep the complete pending request and stable idempotency
+   key in private widget state, and retry only after the user follows the link,
+   selects Yoroll, completes Authenticate, and returns to the task. Never
    post an OAuth or operation follow-up message, expose JSON or internal IDs in
    chat, use the confirmation-based follow-up API, or resubmit an accepted
    operation.
@@ -232,9 +232,10 @@ must not declare the whole server as OAuth-only or predeclare a global scope
 set. `render_creation_menu` and `render_creation_form` must remain anonymous.
 Let the server's per-tool `securitySchemes` and standard authentication
 challenge mark the first protected call as requiring Yoroll OAuth. On Codex Mac,
-the card opens the installed Plugins page so the user can select Yoroll and
-enter the host-owned Authenticate flow; it does not construct or handle an
-OAuth URL or hard-code a machine-specific marketplace path.
+the card shows a user-clicked connection link to the installed Plugins page so
+the user can select Yoroll and enter the host-owned Authenticate flow; it does
+not construct or handle an OAuth URL or hard-code a machine-specific
+marketplace path.
 After authorization, resume the exact pending request from private card state
 with the same `client_request_id`; do not ask the user to re-enter card settings
 or type a connection prompt.

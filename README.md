@@ -29,11 +29,11 @@ business tools.
    called.
 8. Protected submissions stay inside the silent MCP Apps `tools/call` bridge.
    When the current Codex Mac host returns an OAuth challenge instead of opening
-   it automatically, the card opens the installed Plugins page. The user selects
-   Yoroll and starts Authenticate from its MCP server settings; the card keeps
-   the form and stable idempotency key in private widget state and retries the
-   exact request after authorization and return. The card never posts a
-   follow-up message or technical JSON.
+   it automatically, the card shows a `Connect Yoroll` link to the installed
+   Plugins page. The user selects Yoroll and starts Authenticate from its MCP
+   server settings; the card keeps the form and stable idempotency key in
+   private widget state and retries the exact request after authorization and
+   return. The card never posts a follow-up message or technical JSON.
 
 Dialogue speech and background music are not advertised or routed in this
 preview's first-run experience.
