@@ -199,8 +199,9 @@ The installed Skill must:
    `ui/update-model-context` when supported, then enqueue one short
    natural-language `ui/message`. Optional context-update support must never
    block the message. Never expose JSON, tool instructions, or internal IDs in
-   the visible message; do not use the confirmation-based host follow-up API or
-   resubmit an accepted operation.
+   the visible message. Send `ui/message` as a JSON-RPC request, not a
+   notification that only stages composer content; do not use the
+   confirmation-based host follow-up API or resubmit an accepted operation.
 10. On any later anonymous menu or detailed-form render, treat the card as the
     complete response and add no assistant text below it. Do not restate the
     selected type or report that the user is not logged in, no content was

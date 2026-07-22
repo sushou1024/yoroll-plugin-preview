@@ -117,7 +117,9 @@ it, and must then enqueue one short natural-language `ui/message` asking Codex
 to connect Yoroll and continue. Failure or absence of
 `ui/update-model-context` must not block that message. Never expose the
 arguments as JSON, tool instructions, or internal identifiers in the visible
-message, and never use `sendFollowUpMessage`.
+message. Send `ui/message` as a JSON-RPC request so the host posts it; do not
+send a notification that merely stages a composer attachment, and never use
+`sendFollowUpMessage`.
 
 ### Public-card response contract
 
@@ -142,8 +144,9 @@ polling only in a new model turn triggered by exactly one app-authored
 and polling rules in model-visible widget state, may additionally mirror them
 through `ui/update-model-context`, then enqueue one short natural-language
 message through the MCP Apps bridge. It must not expose the operation ID or tool
-instructions in that visible message, use the host's confirmation-based
-follow-up API, or resubmit the protected business tool.
+instructions in that visible message, send `ui/message` as a notification, use
+the host's confirmation-based follow-up API, or resubmit the protected business
+tool.
 Treat the model-only receipt as an already accepted operation: call
 `get_operation` with the returned ID and never submit the business tool again.
 Never imply that Codex is tracking merely because the component received the
