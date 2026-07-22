@@ -111,12 +111,13 @@ HTTP call.
 On submit, the component calls the protected business tool directly. It must
 not preflight with `get_account`. If that direct call returns the standard OAuth
 challenge, the component must save the exact pending tool name and arguments in
-the model-visible widget-state key `yorollContinuation`, may additionally send
-them through `ui/update-model-context` when the host supports it, and must then
-enqueue one short natural-language `ui/message` asking Codex to connect Yoroll
-and continue. Failure or absence of `ui/update-model-context` must not block that
-message. Never expose the arguments as JSON, tool instructions, or internal
-identifiers in the visible message, and never use `sendFollowUpMessage`.
+the model-visible widget-state field `modelContent.yorollContinuation`, may
+additionally send them through `ui/update-model-context` when the host supports
+it, and must then enqueue one short natural-language `ui/message` asking Codex
+to connect Yoroll and continue. Failure or absence of
+`ui/update-model-context` must not block that message. Never expose the
+arguments as JSON, tool instructions, or internal identifiers in the visible
+message, and never use `sendFollowUpMessage`.
 
 ### Public-card response contract
 
@@ -157,8 +158,8 @@ for recovery.
 2. Reuse a valid authorization silently. Do not force a login check before an
    anonymous card.
 3. When model-only card context, including widget-state
-   `yorollContinuation`, contains a pending protected request after an OAuth
-   challenge, call that tool with the exact saved arguments and stable
+   `modelContent.yorollContinuation`, contains a pending protected request after
+   an OAuth challenge, call that tool with the exact saved arguments and stable
    `client_request_id` after authorization. Do not echo the arguments, ask the
    user to choose again, or ask them to re-enter settings.
 4. Never ask for a password, verification code, cookie, consent code, access

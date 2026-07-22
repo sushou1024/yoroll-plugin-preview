@@ -194,8 +194,9 @@ The installed Skill must:
    open that exact DEV URL in the existing Yoroll tab.
 9. Require the settings card to call the protected business tool directly,
    without a `get_account` preflight. For OAuth continuation and accepted
-   operations, persist exact machine data in model-visible widget state, mirror
-   it through `ui/update-model-context` when supported, then enqueue one short
+   operations, persist exact machine data in
+   `modelContent.yorollContinuation`, mirror it through
+   `ui/update-model-context` when supported, then enqueue one short
    natural-language `ui/message`. Optional context-update support must never
    block the message. Never expose JSON, tool instructions, or internal IDs in
    the visible message; do not use the confirmation-based host follow-up API or

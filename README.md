@@ -28,7 +28,7 @@ business tools.
    `generate_video`. OAuth begins only when that protected business tool is
    called.
 8. OAuth retry arguments and accepted operation receipts are stored in
-   model-visible widget state and optionally mirrored through
+   `modelContent.yorollContinuation` and optionally mirrored through
    `ui/update-model-context`. The card posts only a short natural `ui/message`,
    so visible conversation never contains raw JSON, tool instructions, or
    operation IDs. The new model turn resumes OAuth or polls `get_operation`,
