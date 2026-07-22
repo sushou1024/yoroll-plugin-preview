@@ -110,11 +110,13 @@ HTTP call.
 
 On submit, the component calls the protected business tool directly. It must
 not preflight with `get_account`. If that direct call returns the standard OAuth
-challenge, the component may put the exact pending tool name and arguments in
-`ui/update-model-context`, then enqueue one short natural-language `ui/message`
-asking Codex to connect Yoroll and continue. Never expose the arguments as JSON,
-tool instructions, or internal identifiers in the visible message, and never
-use `sendFollowUpMessage`.
+challenge, the component must save the exact pending tool name and arguments in
+the model-visible widget-state key `yorollContinuation`, may additionally send
+them through `ui/update-model-context` when the host supports it, and must then
+enqueue one short natural-language `ui/message` asking Codex to connect Yoroll
+and continue. Failure or absence of `ui/update-model-context` must not block that
+message. Never expose the arguments as JSON, tool instructions, or internal
+identifiers in the visible message, and never use `sendFollowUpMessage`.
 
 ### Public-card response contract
 
@@ -136,10 +138,11 @@ use `sendFollowUpMessage`.
 After a component-initiated business call returns an operation ID, continue
 polling only in a new model turn triggered by exactly one app-authored
 `ui/message` continuation. The component must first place the operation receipt
-and polling rules in model-only `ui/update-model-context`, then enqueue one short
-natural-language message through the MCP Apps bridge. It must not expose the
-operation ID or tool instructions in that visible message, use the host's
-confirmation-based follow-up API, or resubmit the protected business tool.
+and polling rules in model-visible widget state, may additionally mirror them
+through `ui/update-model-context`, then enqueue one short natural-language
+message through the MCP Apps bridge. It must not expose the operation ID or tool
+instructions in that visible message, use the host's confirmation-based
+follow-up API, or resubmit the protected business tool.
 Treat the model-only receipt as an already accepted operation: call
 `get_operation` with the returned ID and never submit the business tool again.
 Never imply that Codex is tracking merely because the component received the
@@ -153,8 +156,9 @@ for recovery.
    standard authentication challenge.
 2. Reuse a valid authorization silently. Do not force a login check before an
    anonymous card.
-3. When model-only card context contains a pending protected request after an
-   OAuth challenge, call that tool with the exact saved arguments and stable
+3. When model-only card context, including widget-state
+   `yorollContinuation`, contains a pending protected request after an OAuth
+   challenge, call that tool with the exact saved arguments and stable
    `client_request_id` after authorization. Do not echo the arguments, ask the
    user to choose again, or ask them to re-enter settings.
 4. Never ask for a password, verification code, cookie, consent code, access
