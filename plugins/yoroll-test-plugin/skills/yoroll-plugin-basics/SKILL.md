@@ -85,8 +85,10 @@ dialogue-speech or background-music generation in this preview.
 
 ## Creation cards
 
-`render_creation_menu` and `render_creation_form` are anonymous. Never call
-`get_account` or start OAuth before showing either card.
+`render_creation_menu` and `render_creation_form` are anonymous at the MCP
+protocol boundary. Installation normally establishes the Yoroll authorization;
+never call `get_account` or start a second OAuth flow before showing either
+card.
 
 Choosing `interactive_game`, `image`, or `video` in the menu, and returning from
 the settings form to the menu, are navigation rather than new conversational
@@ -110,11 +112,12 @@ HTTP call.
 
 On submit, the component calls the protected business tool directly. It must
 not preflight with `get_account`. Keep the call inside the silent MCP Apps
-`tools/call` bridge. If Codex Mac returns the standard OAuth challenge without
-opening it, show a connection link to the portable installed Plugins surface at
-`codex://skills`, preserve the full pending request and stable
-`client_request_id` in private widget state, and retry when the user returns
-after following the link, selecting Yoroll, and completing Authenticate. Never
+`tools/call` bridge. If an installed authorization later expires and Codex Mac
+returns the standard OAuth challenge without opening it, show a user-clicked
+link to `codex://settings` through the host's `openExternal` bridge, preserve
+the full pending request and stable `client_request_id` in private widget state,
+and retry when the user returns after opening Plugins, selecting Yoroll, and
+completing Authenticate. Never
 enqueue `ui/message`, call
 `sendFollowUpMessage`, expose the arguments as JSON or tool instructions, or
 ask the user to type a connection prompt.
@@ -145,10 +148,10 @@ after success.
 
 ## Authentication
 
-1. Start the Yoroll connection flow only when the first protected tool returns
-   its standard authentication challenge. The current Codex Mac fallback opens
-   a connection link to the installed Plugins page, where the user selects
-   Yoroll; the host still owns OAuth itself.
+1. Reuse the Yoroll connection established by the installation-time,
+   host-owned OAuth flow. If that authorization later expires, the current
+   Codex Mac fallback opens `codex://settings` through the host bridge; the user
+   opens Plugins and selects Yoroll, while the host still owns OAuth itself.
 2. Reuse a valid authorization silently. Do not force a login check before an
    anonymous card.
 3. Let the same card submission carry the OAuth challenge through the silent

@@ -24,16 +24,17 @@ business tools.
 6. `render_creation_form` loads the current model, genre, style, format, and
    generation settings for the selected intent. The card is the complete
    response; Codex does not append login, creation, or credit-status narration.
-7. The card submits directly to `create_project`, `generate_image`, or
-   `generate_video`. OAuth begins only when that protected business tool is
-   called.
+7. Installation establishes the Yoroll authorization through the host-owned
+   OAuth flow. The card then submits directly to `create_project`,
+   `generate_image`, or `generate_video` without a second login preflight.
 8. Protected submissions stay inside the silent MCP Apps `tools/call` bridge.
-   When the current Codex Mac host returns an OAuth challenge instead of opening
-   it automatically, the card shows a `Connect Yoroll` link to the installed
-   Plugins page. The user selects Yoroll and starts Authenticate from its MCP
-   server settings; the card keeps the form and stable idempotency key in
-   private widget state and retries the exact request after authorization and
-   return. The card never posts a follow-up message or technical JSON.
+   If an installed authorization later expires and the current Codex Mac host
+   returns an OAuth challenge instead of opening it automatically, the card
+   opens the valid `codex://settings` route through the host bridge. The user
+   opens Plugins, selects Yoroll, and starts Authenticate from its MCP server
+   settings; the card keeps the form and stable idempotency key in private
+   widget state and retries the exact request after authorization and return.
+   The card never posts a follow-up message or technical JSON.
 
 Dialogue speech and background music are not advertised or routed in this
 preview's first-run experience.
@@ -64,9 +65,10 @@ origin. Open only ordinary `web_url` values returned by the test MCP.
 
 ## Authentication boundary
 
-The marketplace policy is `authentication: ON_USE`. The plugin does not mark
-the entire MCP server as authenticated or predeclare global scopes; the
-server's per-tool security metadata is the authentication boundary.
+The marketplace policy is `authentication: ON_INSTALL`, so Codex connects the
+server before first use. The plugin still does not mark the entire MCP server as
+authenticated or predeclare global scopes; the server's per-tool security
+metadata remains the protocol-level authentication boundary.
 
 - Public: `render_creation_menu`, `render_creation_form`.
 - OAuth-protected: account, credits, project, workflow, image/video generation,

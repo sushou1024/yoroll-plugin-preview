@@ -16,8 +16,10 @@ Installation is complete only when all of the following are true:
 4. A new Codex composer is opened with the Yoroll plugin explicitly attached
    and the localized first-run request ready to send.
 
-Do not authenticate, call Yoroll MCP, open Yoroll, create content, or spend
-credits inside the installation task. The installed Skill owns first-run
+Do not enter credentials, grant consent, call Yoroll business tools, open
+Yoroll, create content, or spend credits on the user's behalf inside the
+installation task. The host may pause installation for its own Yoroll OAuth
+flow; the user must complete that flow. The installed Skill owns first-run
 onboarding in the new task.
 
 ## Host and CLI
@@ -93,8 +95,9 @@ The plugin must be installed and enabled. In local mode, `source.path` and
 `marketplaceSource.source` must resolve under the discovered `REPO_ROOT`. In Git
 mode, `marketplaceSource.source` must identify the canonical repository and the
 configured ref must be `main`. Yoroll MCP must be enabled with Streamable HTTP
-at `https://mcp.yoroll.ai/mcp`. It may correctly report `Not logged in`;
-authentication is intentionally deferred until first protected use.
+at `https://mcp.yoroll.ai/mcp`. Because this preview uses installation-time
+authentication, complete the host-owned OAuth flow if prompted and verify the
+server no longer reports `Not logged in` before opening the new task.
 
 ## Resolve the first-run language
 
@@ -186,19 +189,21 @@ The installed Skill must:
    returns from settings to the menu, switch views silently with a direct
    app-to-MCP tool call or same-widget state transition. Do not send a follow-up
    prompt or open a host confirmation dialog for either navigation step.
-6. Start OAuth only when the user submits a protected creation or later requests
-   another protected business action.
+6. Reuse the authorization established by the installation flow. Do not start a
+   second login or add an account preflight when a protected creation is
+   submitted.
 7. Keep every business action in MCP. Browser is a visible workbench, not an
    automation fallback.
 8. After a successful project, image, or video operation returns a `web_url`,
    open that exact DEV URL in the existing Yoroll tab.
 9. Require the settings card to call the protected business tool directly,
    without a `get_account` preflight, through the silent MCP Apps `tools/call`
-   bridge. If the current Codex Mac host returns an OAuth challenge without
-   opening it, show a connection link to the portable installed Plugins surface
-   at `codex://skills`, keep the complete pending request and stable idempotency
-   key in private widget state, and retry only after the user follows the link,
-   selects Yoroll, completes Authenticate, and returns to the task. Never
+   bridge. If that authorization later expires and the current Codex Mac host
+   returns an OAuth challenge without opening it, show a user-clicked link to
+   the valid Codex settings route at `codex://settings` through the host's
+   `openExternal` bridge. Keep the complete pending request and stable
+   idempotency key in private widget state, and retry only after the user opens
+   Plugins, selects Yoroll, completes Authenticate, and returns to the task. Never
    post an OAuth or operation follow-up message, expose JSON or internal IDs in
    chat, use the confirmation-based follow-up API, or resubmit an accepted
    operation.
@@ -227,15 +232,16 @@ present in the new composer.
 
 ## Authentication boundary
 
-The marketplace uses `authentication: ON_USE`. The plugin MCP configuration
-must not declare the whole server as OAuth-only or predeclare a global scope
-set. `render_creation_menu` and `render_creation_form` must remain anonymous.
-Let the server's per-tool `securitySchemes` and standard authentication
-challenge mark the first protected call as requiring Yoroll OAuth. On Codex Mac,
-the card shows a user-clicked connection link to the installed Plugins page so
-the user can select Yoroll and enter the host-owned Authenticate flow; it does
-not construct or handle an OAuth URL or hard-code a machine-specific
-marketplace path.
+The marketplace uses `authentication: ON_INSTALL` so Codex establishes the
+Yoroll connection during installation. The plugin MCP configuration must not
+declare the whole server as OAuth-only or predeclare a global scope set.
+`render_creation_menu` and `render_creation_form` remain anonymous at the MCP
+protocol boundary, and the server's per-tool `securitySchemes` continue to
+protect business calls. If an installed authorization later expires, the card
+offers a user-clicked `codex://settings` link through the host bridge so the
+user can open Plugins, select Yoroll, and enter the host-owned Authenticate
+flow. It does not construct or handle an OAuth URL or hard-code a
+machine-specific marketplace path.
 After authorization, resume the exact pending request from private card state
 with the same `client_request_id`; do not ask the user to re-enter card settings
 or type a connection prompt.
