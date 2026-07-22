@@ -21,8 +21,9 @@ production origin. Use `https://mcp.yoroll.ai/mcp` and
 4. Fall back to English.
 
 Use the resolved language for onboarding, natural-language parameter questions,
-progress, and completion replies. Keep tool names and stable identifiers
-unchanged.
+progress, and completion replies. Pass `language: "zh"` or `language: "en"`
+to `render_creation_menu` and `get_creation_options`. Keep tool names and stable
+identifiers unchanged.
 
 ## Installer-created first run
 
@@ -67,9 +68,10 @@ dialogue-speech or background-music generation in this preview.
 ## Route the user's intent
 
 - When the user has not selected a creation type, call
-  `render_creation_menu`.
+  `render_creation_menu` with the resolved language.
 - When the user explicitly asks for an interactive game, image, or video, skip
-  the menu and collect the required parameters through conversation.
+  the menu, call `get_creation_options` for that intent and resolved language,
+  and collect the required parameters through conversation.
 - Treat create, new, first, make, and their equivalents as new-project intent.
   Never ask “new or existing?” after that intent is already clear.
 - Treat continue, resume, open, existing, and their equivalents as
@@ -90,6 +92,13 @@ Choosing an option updates model-only context through
 `ui/update-model-context`. It must not call `render_creation_form`, post
 `ui/message`, call `sendFollowUpMessage`, open a host confirmation dialog, or
 create content. After selecting, the user continues in ordinary conversation.
+
+`get_creation_options` is anonymous and model-only. Call it once after an
+interactive-game, image, or video intent becomes clear so current models,
+supported choices, and safe defaults come from Yoroll rather than memory. It
+must not render a card. Do not paste its raw catalog into chat; translate only
+the choices needed for the next short question. Do not call it for `other`
+until that request has been routed to one of the supported creation intents.
 
 Collect only the parameters relevant to the selected intent. Ask one short
 question at a time when information is missing. Use safe server defaults when
@@ -150,14 +159,22 @@ After a successful creation or generation operation:
 
 1. Poll asynchronous work with `get_operation` using bounded backoff until it
    succeeds, fails, is cancelled, or the user asks to stop.
-2. Call `create_browser_handoff` with that completed `operation_id`. Do not
+2. Load the Browser-control instructions, select Codex's in-app Browser with
+   the persistent `iab` binding, and claim the existing exact
+   `https://dev.yoroll.ai` tab. Create one DEV tab only when none exists.
+3. Call `create_browser_handoff` with that completed `operation_id`. Do not
    construct, log, quote, or reuse a handoff URL.
-3. Immediately open the exact returned `handoff_url` in the existing Yoroll DEV
-   tab. It is a short-lived one-time credential that establishes the matching
-   read-only browser session and redirects to the server-bound result path.
-4. Keep the redirected project or media page visible as the user's editable
-   workbench. Continue all business edits through MCP.
-5. If handoff creation or Browser opening fails, report partial completion and
+4. Immediately navigate that DEV tab to the exact returned `handoff_url`. It is
+   a short-lived one-time credential, so do not open it in Chrome, the system
+   browser, a duplicate tab, or an external HTTP client. The route establishes
+   the matching read-only browser session and redirects to the server-bound
+   result path.
+5. Wait for the one-time route to redirect to an ordinary
+   `https://dev.yoroll.ai` project or media URL, then keep that redirected page
+   visible and finalize the tab as `deliverable`.
+6. Keep the redirected project or media page as the user's editable workbench.
+   Continue all business edits through MCP.
+7. If handoff creation or Browser opening fails, report partial completion and
    return the ordinary completed operation `web_url`, never the handoff URL.
 
 Do not click, type, drag, submit, or use DOM automation to edit Yoroll project

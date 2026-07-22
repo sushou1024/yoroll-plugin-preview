@@ -18,7 +18,8 @@ business tools.
 4. `render_creation_menu` offers interactive film game, image, video, and other
    request without starting OAuth.
 5. Selecting an option silently updates model context; it does not post a user
-   message or open a second card. Codex collects the remaining parameters in
+   message or open a second card. Codex reads the current headless
+   `get_creation_options` catalog and collects the remaining parameters in
    natural-language conversation.
 6. OAuth is deferred until the user confirms a creation and Codex calls the
    matching protected tool. The host owns the standards-based OAuth flow.
@@ -35,6 +36,8 @@ preview's first-run experience.
 - **Skill:** resolves runtime language, opens the DEV workspace, routes intent,
   coordinates cards, later operation polling, and visible handoff.
 - **MCP card:** collects only anonymous creation intent.
+- **Headless creation options:** provide current models, supported choices, and
+  defaults to the conversation without rendering another card.
 - **Protected MCP tools:** own every account, project, workflow, media,
   operation, and publishing action.
 - **Browser:** displays Yoroll but never replaces MCP with frontend automation.
@@ -61,7 +64,8 @@ The marketplace policy is `authentication: ON_USE`. Public onboarding remains
 anonymous; the server's per-tool security metadata triggers OAuth only for the
 first confirmed protected action.
 
-- Public/model-visible: `render_creation_menu`.
+- Public/model-visible: `render_creation_menu`, `get_creation_options`.
+- User-visible MCP App: `render_creation_menu` only.
 - OAuth-protected: account, credits, project, workflow, image/video generation,
   operations, and publishing.
 - Browser login state is not treated as proof of MCP authorization.

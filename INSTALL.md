@@ -187,17 +187,21 @@ The installed Skill must:
 5. When the user chooses an option in the menu, update model-only context and
    keep the same card. Do not show a detailed form, send a follow-up prompt, or
    open a host confirmation dialog.
-6. Defer OAuth until the user confirms the effective parameters and the first
+6. Read current models, supported choices, and safe defaults from the headless
+   `get_creation_options` tool, then collect only the needed parameters in
+   natural-language conversation.
+7. Defer OAuth until the user confirms the effective parameters and the first
    protected creation tool is called.
-7. Keep every business action in MCP. Browser is a visible workbench, not an
+8. Keep every business action in MCP. Browser is a visible workbench, not an
    automation fallback.
-8. Poll a successful project, image, or video operation, call
-   `create_browser_handoff`, and immediately open its exact one-time URL in the
-   existing Yoroll tab. The redirected page is the visible deliverable.
-9. Keep stable idempotency across any post-OAuth retry. Never expose JSON,
+9. Poll a successful project, image, or video operation, select Codex's in-app
+   Browser explicitly, call `create_browser_handoff`, and immediately open its
+   exact one-time URL in the existing Yoroll DEV tab. Wait for the redirect and
+   keep the resulting project or media page as the visible deliverable.
+10. Keep stable idempotency across any post-OAuth retry. Never expose JSON,
    OAuth secrets, handoff URLs, or internal IDs in chat, and never resubmit an
    accepted operation.
-10. On any later anonymous menu render, treat the card as the
+11. On any later anonymous menu render, treat the card as the
     complete response and add no assistant text below it. Do not restate the
     selected type or report that the user is not logged in, no content was
     created, or no credits were spent.
@@ -225,7 +229,7 @@ present in the new composer.
 The marketplace uses `authentication: ON_USE` so installation and onboarding
 stay anonymous. The plugin MCP configuration must not
 declare the whole server as OAuth-only or predeclare a global scope set.
-`render_creation_menu` remains anonymous at the MCP
+`render_creation_menu` and the headless `get_creation_options` remain anonymous at the MCP
 protocol boundary, and the server's per-tool `securitySchemes` continue to
 protect business calls. Codex owns the OAuth flow after a protected tool
 challenge. After authorization, retry only the exact pending request with the

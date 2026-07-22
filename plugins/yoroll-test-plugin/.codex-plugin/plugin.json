@@ -1,6 +1,6 @@
 {
   "name": "yoroll-test-plugin",
-  "version": "0.2.0+codex.20260722133101",
+  "version": "0.2.0+codex.20260722171438",
   "description": "Choose a Yoroll intent anonymously, authenticate on first creation, and keep the DEV result visible.",
   "author": {
     "name": "Yoroll Developer Preview",

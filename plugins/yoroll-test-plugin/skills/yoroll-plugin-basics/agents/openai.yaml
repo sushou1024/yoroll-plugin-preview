@@ -1,7 +1,7 @@
 interface:
   display_name: "Yoroll"
-  short_description: "Keep Yoroll visible and create with MCP cards"
-  default_prompt: "Use $yoroll-plugin-basics to open and keep the Yoroll DEV workspace visible, show its public creation card, and keep the user-facing reply free of internal narration."
+  short_description: "Create with one card and natural-language setup"
+  default_prompt: "Use $yoroll-plugin-basics to open and keep the Yoroll DEV workspace visible, show its single public intent card, collect current creation parameters in conversation, and keep the user-facing reply free of internal narration."
 
 dependencies:
   tools:
