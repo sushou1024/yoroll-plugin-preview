@@ -13,8 +13,8 @@ Installation is complete only when all of the following are true:
    `https://github.com/sushou1024/yoroll-plugin-preview.git` on `main`.
 2. `yoroll-test-plugin@ennio-yoroll-preview` is installed and enabled.
 3. Yoroll MCP is enabled at `https://mcp.yoroll.ai/mcp`.
-4. A new task is created in the same Codex project or workspace, seeded with the
-   localized first-run request, titled, and opened for the user.
+4. A new Codex composer is opened with the Yoroll plugin explicitly attached
+   and the localized first-run request ready to send.
 
 Do not authenticate, call Yoroll MCP, open Yoroll, create content, or spend
 credits inside the installation task. The installed Skill owns first-run
@@ -119,7 +119,7 @@ Title:
 Initial message:
 
 ```text
-开始使用 Yoroll。
+[@Yoroll MCP Preview](plugin://yoroll-test-plugin@ennio-yoroll-preview) 开始使用 Yoroll。
 ```
 
 ### English
@@ -133,30 +133,36 @@ Create with Yoroll
 Initial message:
 
 ```text
-Get started with Yoroll.
+[@Yoroll MCP Preview](plugin://yoroll-test-plugin@ennio-yoroll-preview) Get started with Yoroll.
 ```
 
 ## Create and open the Yoroll task
 
-The newly installed plugin is not loaded into the installation task. A new task
-is mandatory.
+The newly installed plugin is not loaded into the installation task. A new
+plugin-backed task is mandatory. A plain `create_thread` prompt does not attach
+the plugin, even when its text contains the plugin Markdown reference, so do not
+use task-management tools for this handoff.
 
-1. Discover task-management capabilities equivalent to `create_thread`,
-   `send_message_to_thread`, `list_threads`, `set_thread_title`, and
-   `navigate_to_codex_page`.
-2. Preserve the installation task's current Codex project or workspace. Create
-   a projectless task only when the installation task is projectless.
-3. Prefer creating the task with the localized initial message in one call.
-   Otherwise create it and immediately send the message. An empty task is a
-   failure.
-4. Wait until the task is registered, then set the localized title. If title
-   propagation races creation, refresh the task list and retry.
-5. Open the new task for the user.
+Open Codex's supported new-task deep link for the resolved language:
 
-Use a manual fallback only when task creation, message delivery, project-context
-preservation, title setting, or navigation is genuinely unavailable or returns
-an error. In that case, identify the failed capability and provide the localized
-initial message for the user to paste into a new task.
+Chinese:
+
+```bash
+open 'codex://new?prompt=%5B%40Yoroll%20MCP%20Preview%5D(plugin%3A%2F%2Fyoroll-test-plugin%40ennio-yoroll-preview)%20%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8%20Yoroll%E3%80%82'
+```
+
+English:
+
+```bash
+open 'codex://new?prompt=%5B%40Yoroll%20MCP%20Preview%5D(plugin%3A%2F%2Fyoroll-test-plugin%40ennio-yoroll-preview)%20Get%20started%20with%20Yoroll.'
+```
+
+For another language, percent-encode the complete translated initial message
+as the `prompt` query parameter without changing the plugin Markdown reference.
+The deep link must show the orange Yoroll plugin chip in the composer. The host
+does not expose a supported way for an installer task to silently send a newly
+attached plugin prompt, so leave the localized request ready and ask the user to
+send it once. Do not replace this with an unbacked automatically sent task.
 
 ## First-run behavior in the new task
 
@@ -202,23 +208,27 @@ onboarding or creation cards.
 
 ## Required report
 
-After the new task is open, report only the matching short result:
+After the plugin-backed composer is open, report only the matching short result:
 
 ```text
-Yoroll 已安装，并已打开新的创作任务。
+Yoroll 已安装，新的创作任务已准备好；请发送预填消息。
 ```
 
 ```text
-Yoroll is installed and the new creation task is open.
+Yoroll is installed and the new creation task is ready; send the prefilled message once.
 ```
 
-Do not report success before the task is seeded and open.
+Do not report success before the Yoroll plugin chip and localized request are
+present in the new composer.
 
 ## Authentication boundary
 
-The marketplace uses `authentication: ON_USE`. `render_creation_menu` and
-`render_creation_form` must remain anonymous. Let Codex handle Yoroll OAuth only
-when the first protected tool returns its standard authentication challenge.
+The marketplace uses `authentication: ON_USE`. The plugin MCP configuration
+must not declare the whole server as OAuth-only or predeclare a global scope
+set. `render_creation_menu` and `render_creation_form` must remain anonymous.
+Let the server's per-tool `securitySchemes` and standard authentication
+challenge make Codex start Yoroll OAuth only when the first protected tool is
+called.
 After authorization, resume the exact pending request from model-only card
 context with the same `client_request_id`; do not ask the user to re-enter card
 settings.

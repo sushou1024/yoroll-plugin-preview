@@ -8,7 +8,8 @@ business tools.
 ## Target experience
 
 1. A Codex task reads `INSTALL.md`, installs or updates the plugin, and opens a
-   localized `Create with Yoroll` task in the same project or workspace.
+   new composer with Yoroll explicitly attached and a localized first-run
+   request ready for the user to send once.
 2. The installed Skill opens or reuses `https://dev.yoroll.ai` in Codex's
    in-app Browser, explicitly keeps the Browser visible, and preserves the DEV
    tab as the user-facing deliverable.
@@ -62,7 +63,9 @@ origin. Open only ordinary `web_url` values returned by the test MCP.
 
 ## Authentication boundary
 
-The marketplace policy is `authentication: ON_USE`.
+The marketplace policy is `authentication: ON_USE`. The plugin does not mark
+the entire MCP server as authenticated or predeclare global scopes; the
+server's per-tool security metadata is the authentication boundary.
 
 - Public: `render_creation_menu`, `render_creation_form`.
 - OAuth-protected: account, credits, project, workflow, image/video generation,
