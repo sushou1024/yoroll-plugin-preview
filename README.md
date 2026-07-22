@@ -2,7 +2,7 @@
 
 This repository distributes the test-only Yoroll plugin for Codex. It combines
 an agent-assisted first-run handoff, Codex's built-in Browser as a visible DEV
-workspace, two anonymous MCP creation cards, and Yoroll's OAuth-protected MCP
+workspace, one anonymous MCP intent card, and Yoroll's OAuth-protected MCP
 business tools.
 
 ## Target experience
@@ -17,24 +17,14 @@ business tools.
    menu, without a repeated explanation below the card.
 4. `render_creation_menu` offers interactive film game, image, video, and other
    request without starting OAuth.
-5. Selecting interactive game, image, or video, and returning to the menu,
-   navigate silently through a direct app-to-MCP tool call or same-widget
-   transition. These actions must not post a follow-up user message or trigger
-   a host confirmation dialog.
-6. `render_creation_form` loads the current model, genre, style, format, and
-   generation settings for the selected intent. The card is the complete
-   response; Codex does not append login, creation, or credit-status narration.
-7. Installation establishes the Yoroll authorization through the host-owned
-   OAuth flow. The card then submits directly to `create_project`,
-   `generate_image`, or `generate_video` without a second login preflight.
-8. Protected submissions stay inside the silent MCP Apps `tools/call` bridge.
-   If an installed authorization later expires and the current Codex Mac host
-   returns an OAuth challenge instead of opening it automatically, the card
-   opens the valid `codex://settings` route through the host bridge. The user
-   opens Plugins, selects Yoroll, and starts Authenticate from its MCP server
-   settings; the card keeps the form and stable idempotency key in private
-   widget state and retries the exact request after authorization and return.
-   The card never posts a follow-up message or technical JSON.
+5. Selecting an option silently updates model context; it does not post a user
+   message or open a second card. Codex collects the remaining parameters in
+   natural-language conversation.
+6. OAuth is deferred until the user confirms a creation and Codex calls the
+   matching protected tool. The host owns the standards-based OAuth flow.
+7. Codex polls the returned operation. On success, MCP creates a short-lived,
+   one-time browser handoff that establishes the same account's DEV browser
+   session and redirects to the completed project or media page.
 
 Dialogue speech and background music are not advertised or routed in this
 preview's first-run experience.
@@ -44,13 +34,14 @@ preview's first-run experience.
 - **Installer:** installs the bundle, verifies MCP, creates and opens a new task.
 - **Skill:** resolves runtime language, opens the DEV workspace, routes intent,
   coordinates cards, later operation polling, and visible handoff.
-- **MCP cards:** collect anonymous creation intent and detailed settings.
+- **MCP card:** collects only anonymous creation intent.
 - **Protected MCP tools:** own every account, project, workflow, media,
   operation, and publishing action.
 - **Browser:** displays Yoroll but never replaces MCP with frontend automation.
 
 The plugin does not define a generic submit endpoint, copy Browser cookies into
-MCP, use `/auth/mcp-connect`, or request the legacy `web:session` scope.
+MCP, or use `/auth/mcp-connect`. The protected handoff tool requests
+`web:session` only alongside an actual confirmed creation.
 
 ## Environment boundary
 
@@ -61,16 +52,16 @@ This preview is fixed to:
 - API behind MCP: Yoroll test services
 
 Do not repoint it to `app.yoroll.ai`, `api.lineargame.ai`, or a production
-origin. Open only ordinary `web_url` values returned by the test MCP.
+origin. Browser handoffs must come only from the test MCP and are never copied
+into chat.
 
 ## Authentication boundary
 
-The marketplace policy is `authentication: ON_INSTALL`, so Codex connects the
-server before first use. The plugin still does not mark the entire MCP server as
-authenticated or predeclare global scopes; the server's per-tool security
-metadata remains the protocol-level authentication boundary.
+The marketplace policy is `authentication: ON_USE`. Public onboarding remains
+anonymous; the server's per-tool security metadata triggers OAuth only for the
+first confirmed protected action.
 
-- Public: `render_creation_menu`, `render_creation_form`.
+- Public/model-visible: `render_creation_menu`.
 - OAuth-protected: account, credits, project, workflow, image/video generation,
   operations, and publishing.
 - Browser login state is not treated as proof of MCP authorization.

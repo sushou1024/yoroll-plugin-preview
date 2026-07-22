@@ -1,6 +1,6 @@
 ---
 name: yoroll-plugin-basics
-description: Open or reuse Yoroll's DEV workspace, show its public MCP creation cards, create or continue interactive film-game projects, generate standalone images or videos, edit workflows, and publish through OAuth-protected Yoroll tools. Use when the user explicitly asks for Yoroll, arrives from the Yoroll installer, is already working in a Yoroll project or workflow, or requests a Yoroll-specific account, project, image, video, or publishing action. Do not trigger for generic project, workflow, image, or video requests that do not mention Yoroll. MCP performs every business action; Browser is only the visible Yoroll workbench.
+description: Open or reuse Yoroll's DEV workspace, show its public MCP creation card, create or continue interactive film-game projects, generate standalone images or videos, edit workflows, and publish through OAuth-protected Yoroll tools. Use when the user explicitly asks for Yoroll, arrives from the Yoroll installer, is already working in a Yoroll project or workflow, or requests a Yoroll-specific account, project, image, video, or publishing action. Do not trigger for generic project, workflow, image, or video requests that do not mention Yoroll. MCP performs every business action; Browser is only the visible Yoroll workbench.
 ---
 
 # Yoroll creation workflow
@@ -20,10 +20,9 @@ production origin. Use `https://mcp.yoroll.ai/mcp` and
 3. Otherwise use the language of the user's latest message.
 4. Fall back to English.
 
-Use the resolved language for onboarding, questions, progress, and completion
-replies. Keep tool names and stable identifiers unchanged. Pass `language: "zh"`
-to `render_creation_form` for Chinese and `language: "en"` for English or other
-languages supported only through the English fallback.
+Use the resolved language for onboarding, natural-language parameter questions,
+progress, and completion replies. Keep tool names and stable identifiers
+unchanged.
 
 ## Installer-created first run
 
@@ -70,8 +69,7 @@ dialogue-speech or background-music generation in this preview.
 - When the user has not selected a creation type, call
   `render_creation_menu`.
 - When the user explicitly asks for an interactive game, image, or video, skip
-  the menu and call `render_creation_form` with `interactive_game`, `image`, or
-  `video` plus the resolved `language`.
+  the menu and collect the required parameters through conversation.
 - Treat create, new, first, make, and their equivalents as new-project intent.
   Never ask “new or existing?” after that intent is already clear.
 - Treat continue, resume, open, existing, and their equivalents as
@@ -85,53 +83,38 @@ dialogue-speech or background-music generation in this preview.
 
 ## Creation cards
 
-`render_creation_menu` and `render_creation_form` are anonymous at the MCP
-protocol boundary. Installation normally establishes the Yoroll authorization;
-never call `get_account` or start a second OAuth flow before showing either
-card.
+`render_creation_menu` is anonymous. Never call `get_account` or start OAuth
+before showing it.
 
-Choosing `interactive_game`, `image`, or `video` in the menu, and returning from
-the settings form to the menu, are navigation rather than new conversational
-requests. The components must call
-`render_creation_form` directly through the app-to-MCP tool bridge or switch to
-the other view inside the same widget. They must not call
-`sendFollowUpMessage`, ask the host to post a user-authored prompt, open a host
-confirmation dialog, or create content merely because the user navigated. The
-`other` choice may remain a conversation handoff because it requires free-form
-clarification.
+Choosing an option updates model-only context through
+`ui/update-model-context`. It must not call `render_creation_form`, post
+`ui/message`, call `sendFollowUpMessage`, open a host confirmation dialog, or
+create content. After selecting, the user continues in ordinary conversation.
 
-The detailed card is the review-and-submit surface:
+Collect only the parameters relevant to the selected intent. Ask one short
+question at a time when information is missing. Use safe server defaults when
+the user has no preference; do not interrogate them about every optional model
+field. Before a credit-consuming call, summarize the effective request in
+plain language and obtain explicit confirmation. Then call exactly one matching
+protected tool:
 
-- `interactive_game` submits to `create_project`.
-- `image` submits to `generate_image`.
-- `video` submits to `generate_video`.
+- `interactive_game` uses `create_project`.
+- `image` uses `generate_image`.
+- `video` uses `generate_video`.
 
-Let the existing protected business tool enforce OAuth, credits, idempotency,
-and validation. Do not duplicate the business operation in Browser or another
-HTTP call.
-
-On submit, the component calls the protected business tool directly. It must
-not preflight with `get_account`. Keep the call inside the silent MCP Apps
-`tools/call` bridge. If an installed authorization later expires and Codex Mac
-returns the standard OAuth challenge without opening it, show a user-clicked
-link to `codex://settings` through the host's `openExternal` bridge, preserve
-the full pending request and stable `client_request_id` in private widget state,
-and retry when the user returns after opening Plugins, selecting Yoroll, and
-completing Authenticate. Never
-enqueue `ui/message`, call
-`sendFollowUpMessage`, expose the arguments as JSON or tool instructions, or
-ask the user to type a connection prompt.
+Generate and retain one stable `client_request_id` for an identical retry. Let
+the protected tool trigger host-owned OAuth on first use. Never expose tool
+arguments as JSON or duplicate the business operation in Browser.
 
 ### Public-card response contract
 
 - On installer-created first run, the creation-menu card plus the single
   localized welcome paragraph above are the entire user-facing response.
-- On every later anonymous menu or detailed-form render, treat the card itself
+- On every later anonymous menu render, treat the card itself
   as the entire response. End the turn immediately after the card succeeds and
   add no assistant-authored summary below it.
-- If the host delivers an application-authored routing request for
-  `render_creation_menu` or `render_creation_form`, execute the requested public
-  render without echoing, paraphrasing, or explaining that request.
+- If the host delivers an application-authored request for
+  `render_creation_menu`, execute it without echoing or paraphrasing it.
 - Never append statements such as “the card is displayed”, “currently not
   logged in”, “no content was created”, or “no credits were spent”. Report
   authentication, creation, or credit state only after a protected business
@@ -139,26 +122,20 @@ ask the user to type a connection prompt.
 - Do not narrate card routing, tool names, login policy, or implementation
   details in commentary while rendering a public card.
 
-After a component-initiated business call returns an operation ID, treat it as
-an already accepted operation and never submit the business tool again. Do not
-manufacture another conversation turn from the component. On a later explicit
-user request to continue or check status, call `get_operation` with that ID (or
-recover the operation from `list_operations`) and open its returned `web_url`
-after success.
+After a model-initiated business call returns an operation ID, treat it as an
+already accepted operation and never submit the business tool again. Poll it
+with bounded backoff in the same task until terminal state or until the user
+asks to stop.
 
 ## Authentication
 
-1. Reuse the Yoroll connection established by the installation-time,
-   host-owned OAuth flow. If that authorization later expires, the current
-   Codex Mac fallback opens `codex://settings` through the host bridge; the user
-   opens Plugins and selects Yoroll, while the host still owns OAuth itself.
-2. Reuse a valid authorization silently. Do not force a login check before an
-   anonymous card.
-3. Let the same card submission carry the OAuth challenge through the silent
-   MCP Apps bridge. Keep the full pending request and stable `client_request_id`
-   in private widget state so returning from Authenticate or a deliberate retry
-   does not create a duplicate operation. Do not echo the arguments, ask the
-   user to choose again, or ask them to type a connection prompt.
+1. Reuse valid authorization silently. Do not authenticate during installation,
+   first-run onboarding, menu selection, or parameter collection.
+2. Let the first confirmed protected tool call return the standard OAuth
+   challenge. The Codex host owns authorization, PKCE, callback handling, and
+   token storage; do not construct an authorization URL yourself.
+3. After authorization, retry the identical tool call only when the host did
+   not resume it automatically, using the same `client_request_id`.
 4. Never ask for a password, verification code, cookie, consent code, access
    token, or refresh token in chat.
 5. Do not open `/auth/mcp-connect`, call the legacy
@@ -173,13 +150,15 @@ After a successful creation or generation operation:
 
 1. Poll asynchronous work with `get_operation` using bounded backoff until it
    succeeds, fails, is cancelled, or the user asks to stop.
-2. Use only the exact `web_url` returned by the completed MCP result.
-3. Open that URL in the existing Yoroll DEV tab for a newly created interactive
-   game, image, or video unless the user explicitly asks not to open it.
-4. Keep the resulting project or media page visible as the user's editable
+2. Call `create_browser_handoff` with that completed `operation_id`. Do not
+   construct, log, quote, or reuse a handoff URL.
+3. Immediately open the exact returned `handoff_url` in the existing Yoroll DEV
+   tab. It is a short-lived one-time credential that establishes the matching
+   read-only browser session and redirects to the server-bound result path.
+4. Keep the redirected project or media page visible as the user's editable
    workbench. Continue all business edits through MCP.
-5. If MCP succeeds but Browser opening fails, report partial completion and
-   return the exact `web_url`; do not claim that the visible handoff succeeded.
+5. If handoff creation or Browser opening fails, report partial completion and
+   return the ordinary completed operation `web_url`, never the handoff URL.
 
 Do not click, type, drag, submit, or use DOM automation to edit Yoroll project
 content. Browser display and MCP business state have different responsibilities.

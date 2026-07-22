@@ -18,8 +18,8 @@ Installation is complete only when all of the following are true:
 
 Do not enter credentials, grant consent, call Yoroll business tools, open
 Yoroll, create content, or spend credits on the user's behalf inside the
-installation task. The host may pause installation for its own Yoroll OAuth
-flow; the user must complete that flow. The installed Skill owns first-run
+installation task. Authentication is deferred until the first confirmed
+protected action. The installed Skill owns first-run
 onboarding in the new task.
 
 ## Host and CLI
@@ -95,9 +95,8 @@ The plugin must be installed and enabled. In local mode, `source.path` and
 `marketplaceSource.source` must resolve under the discovered `REPO_ROOT`. In Git
 mode, `marketplaceSource.source` must identify the canonical repository and the
 configured ref must be `main`. Yoroll MCP must be enabled with Streamable HTTP
-at `https://mcp.yoroll.ai/mcp`. Because this preview uses installation-time
-authentication, complete the host-owned OAuth flow if prompted and verify the
-server no longer reports `Not logged in` before opening the new task.
+at `https://mcp.yoroll.ai/mcp`. It may correctly report `Not logged in` because
+authentication is intentionally deferred until protected use.
 
 ## Resolve the first-run language
 
@@ -183,31 +182,22 @@ The installed Skill must:
 3. In that same assistant turn, show the anonymous creation menu and return only
    one short localized welcome paragraph. In Chinese use: `Yoroll 插件已经安装好了。现在你可以使用 Yoroll 创建互动影游，也可以用它生成图片和视频；有其他需求也可以直接告诉我。`
    Do not add bullets, a second question, or another explanation below the card.
-4. If the initial user request already names
-   interactive game, image, or video, skip the menu and show that settings card.
-5. When the user chooses interactive game, image, or video in the menu, or
-   returns from settings to the menu, switch views silently with a direct
-   app-to-MCP tool call or same-widget state transition. Do not send a follow-up
-   prompt or open a host confirmation dialog for either navigation step.
-6. Reuse the authorization established by the installation flow. Do not start a
-   second login or add an account preflight when a protected creation is
-   submitted.
+4. If the initial user request already names interactive game, image, or video,
+   skip the menu and collect parameters naturally in conversation.
+5. When the user chooses an option in the menu, update model-only context and
+   keep the same card. Do not show a detailed form, send a follow-up prompt, or
+   open a host confirmation dialog.
+6. Defer OAuth until the user confirms the effective parameters and the first
+   protected creation tool is called.
 7. Keep every business action in MCP. Browser is a visible workbench, not an
    automation fallback.
-8. After a successful project, image, or video operation returns a `web_url`,
-   open that exact DEV URL in the existing Yoroll tab.
-9. Require the settings card to call the protected business tool directly,
-   without a `get_account` preflight, through the silent MCP Apps `tools/call`
-   bridge. If that authorization later expires and the current Codex Mac host
-   returns an OAuth challenge without opening it, show a user-clicked link to
-   the valid Codex settings route at `codex://settings` through the host's
-   `openExternal` bridge. Keep the complete pending request and stable
-   idempotency key in private widget state, and retry only after the user opens
-   Plugins, selects Yoroll, completes Authenticate, and returns to the task. Never
-   post an OAuth or operation follow-up message, expose JSON or internal IDs in
-   chat, use the confirmation-based follow-up API, or resubmit an accepted
-   operation.
-10. On any later anonymous menu or detailed-form render, treat the card as the
+8. Poll a successful project, image, or video operation, call
+   `create_browser_handoff`, and immediately open its exact one-time URL in the
+   existing Yoroll tab. The redirected page is the visible deliverable.
+9. Keep stable idempotency across any post-OAuth retry. Never expose JSON,
+   OAuth secrets, handoff URLs, or internal IDs in chat, and never resubmit an
+   accepted operation.
+10. On any later anonymous menu render, treat the card as the
     complete response and add no assistant text below it. Do not restate the
     selected type or report that the user is not logged in, no content was
     created, or no credits were spent.
@@ -232,23 +222,18 @@ present in the new composer.
 
 ## Authentication boundary
 
-The marketplace uses `authentication: ON_INSTALL` so Codex establishes the
-Yoroll connection during installation. The plugin MCP configuration must not
+The marketplace uses `authentication: ON_USE` so installation and onboarding
+stay anonymous. The plugin MCP configuration must not
 declare the whole server as OAuth-only or predeclare a global scope set.
-`render_creation_menu` and `render_creation_form` remain anonymous at the MCP
+`render_creation_menu` remains anonymous at the MCP
 protocol boundary, and the server's per-tool `securitySchemes` continue to
-protect business calls. If an installed authorization later expires, the card
-offers a user-clicked `codex://settings` link through the host bridge so the
-user can open Plugins, select Yoroll, and enter the host-owned Authenticate
-flow. It does not construct or handle an OAuth URL or hard-code a
-machine-specific marketplace path.
-After authorization, resume the exact pending request from private card state
-with the same `client_request_id`; do not ask the user to re-enter card settings
-or type a connection prompt.
+protect business calls. Codex owns the OAuth flow after a protected tool
+challenge. After authorization, retry only the exact pending request with the
+same `client_request_id` when necessary.
 
 Never ask the user to paste a password, verification code, cookie, consent code,
-access token, or refresh token into chat. Do not open `/auth/mcp-connect`, request
-the legacy `web:session` scope, or copy Browser session state into MCP.
+access token, refresh token, or browser handoff URL into chat. Do not open
+`/auth/mcp-connect` or copy Browser session state into MCP.
 
 For manual authentication diagnosis only:
 
