@@ -13,6 +13,12 @@ Never rewrite an MCP-returned URL to `app.yoroll.ai`, `api.lineargame.ai`, or a
 production origin. Use `https://mcp.yoroll.ai/mcp` and
 `https://dev.yoroll.ai` only.
 
+Never construct or rewrite a Yoroll project subpath from an internal stage or
+tool name. Use the exact `web_url` returned by MCP or the exact destination
+reached by browser handoff. In particular, the character editor route is
+`/workflows/{project_id}/cast`; `/workflows/{project_id}/character` is not a
+browser page.
+
 ## Language
 
 1. Follow an explicit language request.
