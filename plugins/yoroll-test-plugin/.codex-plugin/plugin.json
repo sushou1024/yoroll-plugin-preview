@@ -1,6 +1,6 @@
 {
   "name": "yoroll-test-plugin",
-  "version": "0.2.0+codex.20260730033246",
+  "version": "0.2.0+codex.20260730050722",
   "description": "Choose a Yoroll intent anonymously, authenticate on first creation, and keep the DEV result visible.",
   "author": {
     "name": "Yoroll Developer Preview",
@@ -19,7 +19,7 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Yoroll MCP Preview",
-    "shortDescription": "Create workflows and media with Yoroll MCP",
+    "shortDescription": "Create with Yoroll MCP",
     "longDescription": "A test-environment preview that keeps Yoroll open as a visible DEV workspace, uses one public MCP App card to choose an intent, collects parameters through conversation, and defers host-owned OAuth until the first confirmed creation. Every business change uses an OAuth-protected Yoroll MCP tool; a short-lived one-time handoff opens the completed result in the Browser.",
     "developerName": "Yoroll Developer Preview",
     "category": "Design",
@@ -33,7 +33,6 @@
     "defaultPrompt": [
       "Get started with Yoroll",
       "Create an interactive game with Yoroll",
-      "Show my Yoroll projects and continue one",
       "Generate a standalone image or video with Yoroll"
     ],
     "brandColor": "#FF8652",
