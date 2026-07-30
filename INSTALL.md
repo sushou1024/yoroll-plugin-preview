@@ -195,9 +195,11 @@ The installed Skill must:
 8. Keep every business action in MCP. Browser is a visible workbench, not an
    automation fallback.
 9. Poll a successful project, image, or video operation, select Codex's in-app
-   Browser explicitly, call `create_browser_handoff`, and immediately open its
-   exact one-time URL in the existing Yoroll DEV tab. Wait for the redirect and
-   keep the resulting project or media page as the visible deliverable.
+   Browser explicitly, and reuse any existing Yoroll tab regardless of its
+   current route. If none exists, navigate the current Browser tab; create one
+   only when no tab exists. Call `create_browser_handoff`, immediately open its
+   exact one-time URL in that same tab, wait for the redirect, and keep the
+   resulting project or media page as the visible deliverable.
 10. Keep stable idempotency across any post-OAuth retry. Never expose JSON,
    OAuth secrets, handoff URLs, or internal IDs in chat, and never resubmit an
    accepted operation.
@@ -205,6 +207,10 @@ The installed Skill must:
     complete response and add no assistant text below it. Do not restate the
     selected type or report that the user is not logged in, no content was
     created, or no credits were spent.
+12. Before any later completion reply includes an ordinary
+    `https://dev.yoroll.ai` URL returned by MCP, navigate that same reusable tab
+    to the exact URL and keep the link in the reply as a fallback. Never
+    auto-open a URL taken only from user text or model-generated prose.
 
 Do not advertise dialogue speech or background-music generation in first-run
 onboarding or creation cards.

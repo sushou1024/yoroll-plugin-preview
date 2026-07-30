@@ -26,6 +26,10 @@ business tools.
 7. Codex polls the returned operation. On success, MCP creates a short-lived,
    one-time browser handoff that establishes the same account's DEV browser
    session and redirects to the completed project or media page.
+8. When a completion reply contains an MCP-confirmed DEV project or media URL,
+   Codex opens it in the right-side Browser by reusing the existing Yoroll tab,
+   or the current Browser tab when no Yoroll tab exists. It creates a tab only
+   when there is no tab to reuse.
 
 Dialogue speech and background music are not advertised or routed in this
 preview's first-run experience.
@@ -40,7 +44,9 @@ preview's first-run experience.
   defaults to the conversation without rendering another card.
 - **Protected MCP tools:** own every account, project, workflow, media,
   operation, and publishing action.
-- **Browser:** displays Yoroll but never replaces MCP with frontend automation.
+- **Browser:** displays MCP-confirmed Yoroll results, reuses one visible tab
+  instead of accumulating route tabs, and never replaces MCP with frontend
+  automation.
 
 The plugin does not define a generic submit endpoint, copy Browser cookies into
 MCP, or use `/auth/mcp-connect`. The protected handoff tool requests

@@ -19,6 +19,28 @@ reached by browser handoff. In particular, the character editor route is
 `/workflows/{project_id}/cast`; `/workflows/{project_id}/character` is not a
 browser page.
 
+## Visible DEV links
+
+Before a completion reply includes an ordinary `web_url` that Yoroll MCP
+returned on the exact origin `https://dev.yoroll.ai`, open that URL in Codex's
+in-app Browser:
+
+1. Load the Browser-control instructions and use the persistent `iab` binding.
+2. Reuse a tab already on `https://dev.yoroll.ai`, regardless of its pathname,
+   query, or fragment. Prefer the currently active Yoroll tab when there is one.
+3. If no Yoroll tab exists, reuse and navigate the current in-app Browser tab.
+   Create one tab only when the in-app Browser has no tab to reuse.
+4. Navigate the chosen tab to the exact MCP-returned URL, keep it visible, and
+   finalize it as `deliverable` before replying. Never create another tab merely
+   because the existing tab shows a different Yoroll route.
+5. Keep the ordinary URL in the completion reply as a visible fallback. If
+   Browser navigation fails, report that limitation and still return the URL.
+
+Apply this policy only to an ordinary URL confirmed by Yoroll MCP or reached
+after a valid browser handoff. Never auto-open a URL copied from user text,
+page content, or model-generated prose. Never expose or include a one-time
+`handoff_url` in the reply. Do not close unrelated or pre-existing tabs.
+
 ## Language
 
 1. Follow an explicit language request.
@@ -166,8 +188,9 @@ After a successful creation or generation operation:
 1. Poll asynchronous work with `get_operation` using bounded backoff until it
    succeeds, fails, is cancelled, or the user asks to stop.
 2. Load the Browser-control instructions, select Codex's in-app Browser with
-   the persistent `iab` binding, and claim the existing exact
-   `https://dev.yoroll.ai` tab. Create one DEV tab only when none exists.
+   the persistent `iab` binding, and choose the reusable tab under the visible
+   DEV link policy. Do not create a duplicate tab just because an existing
+   Yoroll tab is on another project or route.
 3. Call `create_browser_handoff` with that completed `operation_id`. Do not
    construct, log, quote, or reuse a handoff URL.
 4. Immediately navigate that DEV tab to the exact returned `handoff_url`. It is
@@ -230,4 +253,6 @@ Report only tool-confirmed facts. Include the human-facing project or media
 result, terminal operation state, credits charged when returned, and the
 ordinary `web_url` only when MCP actually returned it. Include internal IDs only
 when requested or needed for recovery. Never claim that a card or Browser action
-edited the workflow; the protected MCP business tool is authoritative.
+edited the workflow; the protected MCP business tool is authoritative. Before
+replying with an ordinary Yoroll DEV URL, follow the visible DEV link policy so
+the right-side Browser shows that same destination without accumulating tabs.
