@@ -10,19 +10,20 @@ business tools.
 1. A Codex task reads `INSTALL.md`, installs or updates the plugin, and opens a
    new composer with Yoroll explicitly attached and a localized first-run
    request ready for the user to send once.
-2. The installed Skill opens or reuses `https://dev.yoroll.ai` in Codex's
-   in-app Browser, explicitly keeps the Browser visible, and preserves the DEV
-   tab as the user-facing deliverable.
+2. The installed Skill creates a one-time root handoff from the MCP OAuth
+   identity, opens or reuses `https://dev.yoroll.ai` in Codex's in-app Browser,
+   and preserves that signed-in DEV tab as the user-facing deliverable.
 3. The same turn displays one short welcome paragraph and the anonymous creation
    menu, without a repeated explanation below the card.
-4. `render_creation_menu` offers interactive film game, image, video, and other
-   request without starting OAuth.
+4. `render_creation_menu` itself remains public and offers interactive film
+   game, image, video, and other request without requiring a business action.
 5. Selecting an option silently updates model context; it does not post a user
    message or open a second card. Codex reads the current headless
    `get_creation_options` catalog and collects the remaining parameters in
    natural-language conversation.
-6. OAuth is deferred until the user confirms a creation and Codex calls the
-   matching protected tool. The host owns the standards-based OAuth flow.
+6. The root handoff reuses an OAuth grant established during store installation,
+   or lets the host establish it once on first use. The in-app Browser redeems
+   its own session without asking for Yoroll credentials again.
 7. Codex polls the returned operation. On success, MCP creates a short-lived,
    one-time browser handoff that establishes the same account's DEV browser
    session and redirects to the completed project or media page.
@@ -44,13 +45,15 @@ preview's first-run experience.
   defaults to the conversation without rendering another card.
 - **Protected MCP tools:** own every account, project, workflow, media,
   operation, and publishing action.
-- **Browser:** displays MCP-confirmed Yoroll results, reuses one visible tab
-  instead of accumulating route tabs, and never replaces MCP with frontend
-  automation.
+- **Browser:** redeems a short-lived MCP identity handoff into a separate
+  read-only web session, displays MCP-confirmed Yoroll results, reuses one
+  visible tab instead of accumulating route tabs, and never replaces MCP with
+  frontend automation.
 
-The plugin does not define a generic submit endpoint, copy Browser cookies into
-MCP, or use `/auth/mcp-connect`. The protected handoff tool requests
-`web:session` only alongside an actual confirmed creation.
+The plugin does not define a generic submit endpoint, copy cookies between
+browser profiles, or use `/auth/mcp-connect`. The protected handoff tool requests
+`web:session`; without an operation ID it can only land at the DEV root, and with
+one it can only use the succeeded operation's server-verified destination.
 
 ## Environment boundary
 
@@ -66,9 +69,11 @@ into chat.
 
 ## Authentication boundary
 
-The marketplace policy is `authentication: ON_USE`. Public onboarding remains
-anonymous; the server's per-tool security metadata triggers OAuth only for the
-first confirmed protected action.
+The repository marketplace policy is `authentication: ON_USE`; the published
+store listing may establish OAuth during installation. In either case, the
+first-run root handoff reuses the grant when present and otherwise lets the host
+perform the one standards-based OAuth flow. Public card tools remain public at
+the MCP protocol boundary.
 
 - Public/model-visible: `render_creation_menu`, `get_creation_options`.
 - User-visible MCP App: `render_creation_menu` only.

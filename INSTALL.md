@@ -95,8 +95,9 @@ The plugin must be installed and enabled. In local mode, `source.path` and
 `marketplaceSource.source` must resolve under the discovered `REPO_ROOT`. In Git
 mode, `marketplaceSource.source` must identify the canonical repository and the
 configured ref must be `main`. Yoroll MCP must be enabled with Streamable HTTP
-at `https://mcp.yoroll.ai/mcp`. It may correctly report `Not logged in` because
-authentication is intentionally deferred until protected use.
+at `https://mcp.yoroll.ai/mcp`. A local `ON_USE` installation may report
+`Not logged in` until the first-run browser handoff; a store installation may
+already have completed OAuth.
 
 ## Resolve the first-run language
 
@@ -170,11 +171,13 @@ send it once. Do not replace this with an unbacked automatically sent task.
 
 The installed Skill must:
 
-1. Select Codex's in-app Browser explicitly, open or reuse the exact DEV homepage
-   `https://dev.yoroll.ai`, set Browser visibility to `true`, and keep that tab
-   as a `deliverable` so it remains visible beside the task. After that final
-   Browser handoff, do not hide, close, disconnect, reselect, refocus, or make
-   another Browser call in the turn.
+1. Select Codex's in-app Browser explicitly, call `create_browser_handoff` with
+   no `operation_id`, and immediately redeem the returned one-time URL in a
+   reusable Browser tab. It must redirect to the exact DEV homepage
+   `https://dev.yoroll.ai/` with the MCP account's read-only web session. Set
+   Browser visibility to `true` and keep that tab as a `deliverable`. After that
+   final Browser handoff, do not hide, close, disconnect, reselect, refocus, or
+   make another Browser call in the turn.
 2. Keep the process quiet. If a progress update is required, use only
    `正在打开 Yoroll…` in Chinese or `Opening Yoroll…` in English. Do not narrate
    Skill loading, installation checks, login rules, Browser internals,
@@ -190,8 +193,9 @@ The installed Skill must:
 6. Read current models, supported choices, and safe defaults from the headless
    `get_creation_options` tool, then collect only the needed parameters in
    natural-language conversation.
-7. Defer OAuth until the user confirms the effective parameters and the first
-   protected creation tool is called.
+7. Reuse store-install OAuth for the root handoff. If it is absent, let the host
+   complete OAuth once and retry the same empty handoff; never ask the user to
+   log in separately inside the DEV page.
 8. Keep every business action in MCP. Browser is a visible workbench, not an
    automation fallback.
 9. Poll a successful project, image, or video operation, select Codex's in-app
@@ -208,9 +212,11 @@ The installed Skill must:
     selected type or report that the user is not logged in, no content was
     created, or no credits were spent.
 12. Before any later completion reply includes an ordinary
-    `https://dev.yoroll.ai` URL returned by MCP, navigate that same reusable tab
-    to the exact URL and keep the link in the reply as a fallback. Never
-    auto-open a URL taken only from user text or model-generated prose.
+    `https://dev.yoroll.ai` URL returned by MCP, refresh the Browser session with
+    an empty handoff unless this turn already redeemed an operation-bound one,
+    then navigate that same reusable tab to the exact URL and keep the link in
+    the reply as a fallback. Never auto-open a URL taken only from user text or
+    model-generated prose.
 
 Do not advertise dialogue speech or background-music generation in first-run
 onboarding or creation cards.
@@ -232,14 +238,14 @@ present in the new composer.
 
 ## Authentication boundary
 
-The marketplace uses `authentication: ON_USE` so installation and onboarding
-stay anonymous. The plugin MCP configuration must not
-declare the whole server as OAuth-only or predeclare a global scope set.
-`render_creation_menu` and the headless `get_creation_options` remain anonymous at the MCP
-protocol boundary, and the server's per-tool `securitySchemes` continue to
-protect business calls. Codex owns the OAuth flow after a protected tool
-challenge. After authorization, retry only the exact pending request with the
-same `client_request_id` when necessary.
+The repository marketplace uses `authentication: ON_USE`; the published store
+listing may authenticate during installation. The plugin MCP configuration must
+not declare the whole server OAuth-only or predeclare a global scope set.
+`render_creation_menu` and the headless `get_creation_options` remain anonymous
+at the MCP protocol boundary. The no-argument `create_browser_handoff` is the
+only protected first-run call and performs no business action; Codex owns any
+OAuth challenge it triggers. After authorization, retry only the exact pending
+request with the same `client_request_id` when necessary.
 
 Never ask the user to paste a password, verification code, cookie, consent code,
 access token, refresh token, or browser handoff URL into chat. Do not open

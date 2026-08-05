@@ -30,10 +30,16 @@ in-app Browser:
    query, or fragment. Prefer the currently active Yoroll tab when there is one.
 3. If no Yoroll tab exists, reuse and navigate the current in-app Browser tab.
    Create one tab only when the in-app Browser has no tab to reuse.
-4. Navigate the chosen tab to the exact MCP-returned URL, keep it visible, and
-   finalize it as `deliverable` before replying. Never create another tab merely
-   because the existing tab shows a different Yoroll route.
-5. Keep the ordinary URL in the completion reply as a visible fallback. If
+4. Unless this turn already redeemed an operation-bound handoff into that tab,
+   call `create_browser_handoff` with an empty object. Immediately navigate the
+   chosen tab to its exact `handoff_url`, wait for the one-time route to redirect
+   to the DEV root, and never expose that credential in chat. This silently
+   establishes or refreshes the in-app Browser's session from the current MCP
+   OAuth grant; it does not copy an external-browser cookie.
+5. Navigate the same tab to the exact MCP-returned ordinary URL, keep it
+   visible, and finalize it as `deliverable` before replying. Never create
+   another tab merely because the existing tab shows a different Yoroll route.
+6. Keep the ordinary URL in the completion reply as a visible fallback. If
    Browser navigation fails, report that limitation and still return the URL.
 
 Apply this policy only to an ordinary URL confirmed by Yoroll MCP or reached
@@ -71,26 +77,36 @@ available creation options:
 4. Select Codex's in-app Browser explicitly with the persistent `iab` binding.
    Do not use URL-based/default browser selection or Chrome for this first-run
    handoff.
-5. Claim an existing Yoroll DEV tab when one is already open; otherwise create
-   one tab and navigate it to the exact entry URL `https://dev.yoroll.ai`.
+5. Call `create_browser_handoff` with an empty object. Reuse the authorization
+   established during plugin installation; if the host still requires OAuth,
+   let the host complete it and then retry this same no-argument handoff once.
+   This is a session bootstrap only: it does not create content, spend credits,
+   list projects, or accept a client-selected destination.
+6. Claim an existing Yoroll DEV tab when one is already open; otherwise reuse
+   the current in-app Browser tab, creating one only when no tab exists. Navigate
+   that tab immediately to the exact returned `handoff_url`, wait for its
+   one-time redirect to `https://dev.yoroll.ai/`, and never show or quote the
+   handoff URL. If handoff creation is temporarily unavailable, fall back to the
+   exact entry URL `https://dev.yoroll.ai` without blocking the public card.
    Avoid duplicate tabs and do not add a language path.
-6. After the page is ready, set the Browser `visibility` capability to `true`
+7. After the page is ready, set the Browser `visibility` capability to `true`
    once. Do not poll, narrate, or expose the visibility state.
-7. Do not inspect or transfer cookies, local storage, passwords, or session data.
-8. As the final Browser action for the turn, finalize the Yoroll tab with
+8. Do not inspect or transfer cookies, local storage, passwords, or session data.
+9. As the final Browser action for the turn, finalize the Yoroll tab with
    `status: "deliverable"` so the live DEV page stays open and visible beside
    the task. After this handoff, do not hide, close, disconnect, reselect, or
    refocus the Browser, and do not perform another Browser action in the turn.
-9. Call `render_creation_menu` in the same assistant turn.
-10. Use exactly one compact welcome paragraph as the user-visible final reply.
+10. Call `render_creation_menu` in the same assistant turn.
+11. Use exactly one compact welcome paragraph as the user-visible final reply.
    For Chinese use: `Yoroll 插件已经安装好了。现在你可以使用 Yoroll 创建互动影游，也可以用它生成图片和视频；有其他需求也可以直接告诉我。`
    For English use: `The Yoroll plugin is installed. You can now use Yoroll to create interactive film games or generate images and videos; you can also tell me about any other request.`
    Translate the English version faithfully for other resolved languages.
-11. Do not add bullets, headings, a second question, “DEV workspace is open”, or
+12. Do not add bullets, headings, a second question, “DEV workspace is open”, or
    any explanation below the creation card. The card is the selection surface.
 
-Do not authenticate, create content, spend credits, list projects, or ask whether
-to create or continue merely because first-run onboarding began. Do not advertise
+Apart from the no-argument browser-session handoff above, do not call account or
+business tools, create content, spend credits, list projects, or ask whether to
+create or continue merely because first-run onboarding began. Do not advertise
 dialogue-speech or background-music generation in this preview.
 
 ## Route the user's intent
@@ -113,8 +129,9 @@ dialogue-speech or background-music generation in this preview.
 
 ## Creation cards
 
-`render_creation_menu` is anonymous. Never call `get_account` or start OAuth
-before showing it.
+`render_creation_menu` itself is anonymous. Outside the installer-created
+browser-session bootstrap, never call `get_account` or start OAuth before
+showing it.
 
 Choosing an option updates model-only context through
 `ui/update-model-context`. It must not call `render_creation_form`, post
@@ -166,19 +183,24 @@ asks to stop.
 
 ## Authentication
 
-1. Reuse valid authorization silently. Do not authenticate during installation,
-   first-run onboarding, menu selection, or parameter collection.
-2. Let the first confirmed protected tool call return the standard OAuth
-   challenge. The Codex host owns authorization, PKCE, callback handling, and
-   token storage; do not construct an authorization URL yourself.
-3. After authorization, retry the identical tool call only when the host did
+1. Reuse valid authorization silently. The store installation may establish it
+   before first run; never ask the user to sign in to the DEV page again merely
+   because Codex's in-app Browser has a separate profile.
+2. The only protected call allowed before creation confirmation is
+   `create_browser_handoff` with an empty object for the browser-session
+   bootstrap described above. It exchanges the existing MCP identity for a
+   short-lived one-time DEV URL and does not perform a business action.
+3. For every other protected tool, let the first confirmed call return the
+   standard OAuth challenge. The Codex host owns authorization, PKCE, callback
+   handling, and token storage; do not construct an authorization URL yourself.
+4. After authorization, retry the identical tool call only when the host did
    not resume it automatically, using the same `client_request_id`.
-4. Never ask for a password, verification code, cookie, consent code, access
+5. Never ask for a password, verification code, cookie, consent code, access
    token, or refresh token in chat.
-5. Do not open `/auth/mcp-connect`, call the legacy
+6. Do not open `/auth/mcp-connect`, call the legacy
    `approve_browser_session` tool, or treat the visible DEV-page login state as
    the MCP authorization state.
-6. Do not treat authentication consent as approval to spend credits, delete
+7. Do not treat authentication consent as approval to spend credits, delete
    content, or publish.
 
 ## Visible DEV handoff
