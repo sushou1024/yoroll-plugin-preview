@@ -179,7 +179,9 @@ arguments as JSON or duplicate the business operation in Browser.
 After a model-initiated business call returns an operation ID, treat it as an
 already accepted operation and never submit the business tool again. Poll it
 with bounded backoff in the same task until terminal state or until the user
-asks to stop.
+asks to stop. For a project workflow, open the first ordinary `web_url` returned
+by `get_operation` as soon as it is available, even while the operation is still
+running; then continue polling without resubmitting the business tool.
 
 ## Authentication
 
@@ -205,28 +207,36 @@ asks to stop.
 
 ## Visible Yoroll handoff
 
-After a successful creation or generation operation:
+For an asynchronous creation or generation operation:
 
-1. Poll asynchronous work with `get_operation` using bounded backoff until it
-   succeeds, fails, is cancelled, or the user asks to stop.
-2. Load the Browser-control instructions, select Codex's in-app Browser with
-   the persistent `iab` binding, and choose the reusable tab under the visible
-   Yoroll link policy. Do not create a duplicate tab just because an existing
-   Yoroll tab is on another project or route.
-3. Call `create_browser_handoff` with that completed `operation_id`. Do not
-   construct, log, quote, or reuse a handoff URL.
-4. Immediately navigate that Yoroll tab to the exact returned `handoff_url`. It is
-   a short-lived one-time credential, so do not open it in Chrome, the system
-   browser, a duplicate tab, or an external HTTP client. The route establishes
-   the matching read-only browser session and redirects to the server-bound
-   result path.
-5. Wait for the one-time route to redirect to an ordinary
-   `https://app.yoroll.ai` project or media URL, then keep that redirected page
-   visible and finalize the tab as `deliverable`.
-6. Keep the redirected project or media page as the user's editable workbench.
+1. Poll with `get_operation` using bounded backoff until it succeeds, fails, is
+   cancelled, or the user asks to stop.
+2. For a project workflow, when a non-terminal poll first returns an ordinary
+   `web_url`, load the Browser-control instructions, select Codex's in-app
+   Browser with the persistent `iab` binding, and choose the reusable tab under
+   the visible Yoroll link policy. Establish or refresh its session with one
+   empty `create_browser_handoff` if this turn has not already done so, then
+   navigate the same tab to the exact ordinary `web_url`. Do not finalize the
+   tab yet, and continue polling the operation.
+3. Leave stage-to-stage navigation to the loaded Yoroll workflow page. It
+   follows server-confirmed active stages in the same tab. Do not construct a
+   route, open another tab, refresh in a loop, or use Browser automation to
+   imitate workflow progress.
+4. When the operation succeeds, reuse the live-preview tab when one was opened,
+   navigate it to the exact terminal ordinary `web_url` if the destination
+   changed, and finalize it as `deliverable`. Do not create a second handoff for
+   the same operation merely to finalize an already authenticated preview.
+5. If no live preview was opened, call `create_browser_handoff` with the
+   completed `operation_id`, navigate the reusable Yoroll tab immediately to
+   the exact returned one-time `handoff_url`, wait for its redirect to an
+   ordinary project or media URL, and finalize that tab as `deliverable`.
+6. Never construct, log, quote, expose, or reuse a handoff URL. Never open it in
+   Chrome, the system browser, a duplicate tab, or an external HTTP client.
+7. Keep the redirected project or media page as the user's visible workbench.
    Continue all business edits through MCP.
-7. If handoff creation or Browser opening fails, report partial completion and
-   return the ordinary completed operation `web_url`, never the handoff URL.
+8. If handoff creation or Browser opening fails, report partial completion and
+   return the ordinary operation `web_url` when MCP returned one, never the
+   handoff URL.
 
 Do not click, type, drag, submit, or use DOM automation to edit Yoroll project
 content. Browser display and MCP business state have different responsibilities.
