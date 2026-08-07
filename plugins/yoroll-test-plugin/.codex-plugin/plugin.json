@@ -1,33 +1,33 @@
 {
   "name": "yoroll-test-plugin",
-  "version": "0.2.0+codex.20260805070346",
-  "description": "Choose a Yoroll intent, reuse one OAuth login in the DEV Browser, and keep creation results visible.",
+  "version": "0.2.0+codex.20260807074815",
+  "description": "Choose a Yoroll intent, reuse one OAuth login in the Browser, and keep creation results visible.",
   "author": {
-    "name": "Yoroll Developer Preview",
-    "url": "https://dev.yoroll.ai"
+    "name": "Yoroll",
+    "url": "https://app.yoroll.ai"
   },
-  "homepage": "https://dev.yoroll.ai",
+  "homepage": "https://app.yoroll.ai",
   "repository": "https://github.com/sushou1024/yoroll-plugin-preview",
   "keywords": [
     "yoroll",
     "workflow",
     "game-creation",
     "mcp",
-    "preview"
+    "creation"
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "Yoroll MCP Preview",
+    "displayName": "Yoroll",
     "shortDescription": "Create with Yoroll MCP",
-    "longDescription": "A test-environment preview that keeps Yoroll open as a visible DEV workspace, uses one public MCP App card to choose an intent, and collects parameters through conversation. A short-lived one-time handoff projects the existing MCP OAuth identity into Codex's separate in-app Browser without another sign-in; every business change still uses an OAuth-protected Yoroll MCP tool.",
-    "developerName": "Yoroll Developer Preview",
+    "longDescription": "Keep Yoroll open as a visible workspace, use one public MCP App card to choose an intent, and collect parameters through conversation. A short-lived one-time handoff projects the existing MCP OAuth identity into Codex's separate in-app Browser without another sign-in; every business change still uses an OAuth-protected Yoroll MCP tool.",
+    "developerName": "Yoroll",
     "category": "Design",
     "capabilities": [
       "Read",
       "Write"
     ],
-    "websiteURL": "https://dev.yoroll.ai",
+    "websiteURL": "https://app.yoroll.ai",
     "privacyPolicyURL": "https://docs.yoroll.ai/yoroll-privacy-policy",
     "termsOfServiceURL": "https://docs.yoroll.ai/yoroll-terms-of-use",
     "defaultPrompt": [

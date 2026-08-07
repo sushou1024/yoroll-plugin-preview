@@ -1,17 +1,16 @@
 ---
 name: yoroll-plugin-basics
-description: Open or reuse Yoroll's DEV workspace, show its public MCP creation card, create or continue interactive film-game projects, generate standalone images or videos, edit workflows, and publish through OAuth-protected Yoroll tools. Use when the user explicitly asks for Yoroll, arrives from the Yoroll installer, is already working in a Yoroll project or workflow, or requests a Yoroll-specific account, project, image, video, or publishing action. Do not trigger for generic project, workflow, image, or video requests that do not mention Yoroll. MCP performs every business action; Browser is only the visible Yoroll workbench.
+description: Open or reuse Yoroll's workspace, show its public MCP creation card, create or continue interactive film-game projects, generate standalone images or videos, edit workflows, and publish through OAuth-protected Yoroll tools. Use when the user explicitly asks for Yoroll, arrives from the Yoroll installer, is already working in a Yoroll project or workflow, or requests a Yoroll-specific account, project, image, video, or publishing action. Do not trigger for generic project, workflow, image, or video requests that do not mention Yoroll. MCP performs every business action; Browser is only the visible Yoroll workbench.
 ---
 
 # Yoroll creation workflow
 
 Use Yoroll MCP as the source of truth for creation options, account state,
 credits, projects, workflow content, generated media, operations, and publishing.
-Use Codex's built-in Browser only to keep the Yoroll DEV workspace visible.
+Use Codex's built-in Browser only to keep the Yoroll workspace visible.
 
-Never rewrite an MCP-returned URL to `app.yoroll.ai`, `api.lineargame.ai`, or a
-production origin. Use `https://mcp.yoroll.ai/mcp` and
-`https://dev.yoroll.ai` only.
+Use `https://mcp.yoroll.ai/mcp` and `https://app.yoroll.ai` only. Never rewrite
+an MCP-returned URL to `dev.yoroll.ai`, a test API, or another environment.
 
 Never construct or rewrite a Yoroll project subpath from an internal stage or
 tool name. Use the exact `web_url` returned by MCP or the exact destination
@@ -19,21 +18,21 @@ reached by browser handoff. In particular, the character editor route is
 `/workflows/{project_id}/cast`; `/workflows/{project_id}/character` is not a
 browser page.
 
-## Visible DEV links
+## Visible Yoroll links
 
 Before a completion reply includes an ordinary `web_url` that Yoroll MCP
-returned on the exact origin `https://dev.yoroll.ai`, open that URL in Codex's
+returned on the exact origin `https://app.yoroll.ai`, open that URL in Codex's
 in-app Browser:
 
 1. Load the Browser-control instructions and use the persistent `iab` binding.
-2. Reuse a tab already on `https://dev.yoroll.ai`, regardless of its pathname,
+2. Reuse a tab already on `https://app.yoroll.ai`, regardless of its pathname,
    query, or fragment. Prefer the currently active Yoroll tab when there is one.
 3. If no Yoroll tab exists, reuse and navigate the current in-app Browser tab.
    Create one tab only when the in-app Browser has no tab to reuse.
 4. Unless this turn already redeemed an operation-bound handoff into that tab,
    call `create_browser_handoff` with an empty object. Immediately navigate the
    chosen tab to its exact `handoff_url`, wait for the one-time route to redirect
-   to the DEV root, and never expose that credential in chat. This silently
+   to the Yoroll root, and never expose that credential in chat. This silently
    establishes or refreshes the in-app Browser's session from the current MCP
    OAuth grant; it does not copy an external-browser cookie.
 5. Navigate the same tab to the exact MCP-returned ordinary URL, keep it
@@ -68,7 +67,7 @@ available creation options:
 1. Keep the handoff quiet. If a progress update is required before tool calls,
    use only one short localized line. In Chinese use `正在打开 Yoroll…`; in
    English use `Opening Yoroll…`. Do not mention Skill loading, files,
-   installation checks, authentication policy, internal tool names, `iab`, DEV
+   installation checks, authentication policy, internal tool names, `iab`,
    routing, visibility state, retries, or implementation rules.
 2. Do not emit another commentary or progress paragraph during this first-run
    turn. Tool activity may remain visible in the host, but assistant-authored
@@ -82,18 +81,19 @@ available creation options:
    let the host complete it and then retry this same no-argument handoff once.
    This is a session bootstrap only: it does not create content, spend credits,
    list projects, or accept a client-selected destination.
-6. Claim an existing Yoroll DEV tab when one is already open; otherwise reuse
+6. Claim an existing Yoroll tab when one is already open; otherwise reuse
    the current in-app Browser tab, creating one only when no tab exists. Navigate
    that tab immediately to the exact returned `handoff_url`, wait for its
-   one-time redirect to `https://dev.yoroll.ai/`, and never show or quote the
-   handoff URL. If handoff creation is temporarily unavailable, fall back to the
-   exact entry URL `https://dev.yoroll.ai` without blocking the public card.
-   Avoid duplicate tabs and do not add a language path.
+   one-time redirect to `https://app.yoroll.ai/`, and never show or quote the
+   handoff URL. If handoff creation is unavailable, do not replace it with an
+   unauthenticated bare URL; continue with the public card and report the
+   browser-session limitation only when it matters. Avoid duplicate tabs and do
+   not add a language path.
 7. After the page is ready, set the Browser `visibility` capability to `true`
    once. Do not poll, narrate, or expose the visibility state.
 8. Do not inspect or transfer cookies, local storage, passwords, or session data.
 9. As the final Browser action for the turn, finalize the Yoroll tab with
-   `status: "deliverable"` so the live DEV page stays open and visible beside
+   `status: "deliverable"` so the live Yoroll page stays open and visible beside
    the task. After this handoff, do not hide, close, disconnect, reselect, or
    refocus the Browser, and do not perform another Browser action in the turn.
 10. Call `render_creation_menu` in the same assistant turn.
@@ -101,13 +101,13 @@ available creation options:
    For Chinese use: `Yoroll 插件已经安装好了。现在你可以使用 Yoroll 创建互动影游，也可以用它生成图片和视频；有其他需求也可以直接告诉我。`
    For English use: `The Yoroll plugin is installed. You can now use Yoroll to create interactive film games or generate images and videos; you can also tell me about any other request.`
    Translate the English version faithfully for other resolved languages.
-12. Do not add bullets, headings, a second question, “DEV workspace is open”, or
+12. Do not add bullets, headings, a second question, “Yoroll workspace is open”, or
    any explanation below the creation card. The card is the selection surface.
 
 Apart from the no-argument browser-session handoff above, do not call account or
 business tools, create content, spend credits, list projects, or ask whether to
 create or continue merely because first-run onboarding began. Do not advertise
-dialogue-speech or background-music generation in this preview.
+dialogue-speech or background-music generation in first-run onboarding.
 
 ## Route the user's intent
 
@@ -184,12 +184,12 @@ asks to stop.
 ## Authentication
 
 1. Reuse valid authorization silently. The store installation may establish it
-   before first run; never ask the user to sign in to the DEV page again merely
+   before first run; never ask the user to sign in to the Yoroll page again merely
    because Codex's in-app Browser has a separate profile.
 2. The only protected call allowed before creation confirmation is
    `create_browser_handoff` with an empty object for the browser-session
    bootstrap described above. It exchanges the existing MCP identity for a
-   short-lived one-time DEV URL and does not perform a business action.
+   short-lived one-time Yoroll URL and does not perform a business action.
 3. For every other protected tool, let the first confirmed call return the
    standard OAuth challenge. The Codex host owns authorization, PKCE, callback
    handling, and token storage; do not construct an authorization URL yourself.
@@ -198,12 +198,12 @@ asks to stop.
 5. Never ask for a password, verification code, cookie, consent code, access
    token, or refresh token in chat.
 6. Do not open `/auth/mcp-connect`, call the legacy
-   `approve_browser_session` tool, or treat the visible DEV-page login state as
+   `approve_browser_session` tool, or treat the visible Yoroll-page login state as
    the MCP authorization state.
 7. Do not treat authentication consent as approval to spend credits, delete
    content, or publish.
 
-## Visible DEV handoff
+## Visible Yoroll handoff
 
 After a successful creation or generation operation:
 
@@ -211,17 +211,17 @@ After a successful creation or generation operation:
    succeeds, fails, is cancelled, or the user asks to stop.
 2. Load the Browser-control instructions, select Codex's in-app Browser with
    the persistent `iab` binding, and choose the reusable tab under the visible
-   DEV link policy. Do not create a duplicate tab just because an existing
+   Yoroll link policy. Do not create a duplicate tab just because an existing
    Yoroll tab is on another project or route.
 3. Call `create_browser_handoff` with that completed `operation_id`. Do not
    construct, log, quote, or reuse a handoff URL.
-4. Immediately navigate that DEV tab to the exact returned `handoff_url`. It is
+4. Immediately navigate that Yoroll tab to the exact returned `handoff_url`. It is
    a short-lived one-time credential, so do not open it in Chrome, the system
    browser, a duplicate tab, or an external HTTP client. The route establishes
    the matching read-only browser session and redirects to the server-bound
    result path.
 5. Wait for the one-time route to redirect to an ordinary
-   `https://dev.yoroll.ai` project or media URL, then keep that redirected page
+   `https://app.yoroll.ai` project or media URL, then keep that redirected page
    visible and finalize the tab as `deliverable`.
 6. Keep the redirected project or media page as the user's editable workbench.
    Continue all business edits through MCP.
@@ -276,5 +276,5 @@ result, terminal operation state, credits charged when returned, and the
 ordinary `web_url` only when MCP actually returned it. Include internal IDs only
 when requested or needed for recovery. Never claim that a card or Browser action
 edited the workflow; the protected MCP business tool is authoritative. Before
-replying with an ordinary Yoroll DEV URL, follow the visible DEV link policy so
+replying with an ordinary Yoroll URL, follow the visible Yoroll link policy so
 the right-side Browser shows that same destination without accumulating tabs.

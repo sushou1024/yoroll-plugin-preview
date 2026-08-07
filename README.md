@@ -1,7 +1,7 @@
-# Yoroll MCP Developer Preview
+# Yoroll MCP plugin
 
-This repository distributes the test-only Yoroll plugin for Codex. It combines
-an agent-assisted first-run handoff, Codex's built-in Browser as a visible DEV
+This repository distributes the Yoroll plugin for Codex. It combines an
+agent-assisted first-run handoff, Codex's built-in Browser as a visible Yoroll
 workspace, one anonymous MCP intent card, and Yoroll's OAuth-protected MCP
 business tools.
 
@@ -11,8 +11,8 @@ business tools.
    new composer with Yoroll explicitly attached and a localized first-run
    request ready for the user to send once.
 2. The installed Skill creates a one-time root handoff from the MCP OAuth
-   identity, opens or reuses `https://dev.yoroll.ai` in Codex's in-app Browser,
-   and preserves that signed-in DEV tab as the user-facing deliverable.
+   identity, opens or reuses `https://app.yoroll.ai` in Codex's in-app Browser,
+   and preserves that signed-in Yoroll tab as the user-facing deliverable.
 3. The same turn displays one short welcome paragraph and the anonymous creation
    menu, without a repeated explanation below the card.
 4. `render_creation_menu` itself remains public and offers interactive film
@@ -25,20 +25,20 @@ business tools.
    or lets the host establish it once on first use. The in-app Browser redeems
    its own session without asking for Yoroll credentials again.
 7. Codex polls the returned operation. On success, MCP creates a short-lived,
-   one-time browser handoff that establishes the same account's DEV browser
+   one-time browser handoff that establishes the same account's Yoroll browser
    session and redirects to the completed project or media page.
-8. When a completion reply contains an MCP-confirmed DEV project or media URL,
+8. When a completion reply contains an MCP-confirmed Yoroll project or media URL,
    Codex opens it in the right-side Browser by reusing the existing Yoroll tab,
    or the current Browser tab when no Yoroll tab exists. It creates a tab only
    when there is no tab to reuse.
 
 Dialogue speech and background music are not advertised or routed in this
-preview's first-run experience.
+plugin's first-run experience.
 
 ## Architecture boundaries
 
 - **Installer:** installs the bundle, verifies MCP, creates and opens a new task.
-- **Skill:** resolves runtime language, opens the DEV workspace, routes intent,
+- **Skill:** resolves runtime language, opens the Yoroll workspace, routes intent,
   coordinates cards, later operation polling, and visible handoff.
 - **MCP card:** collects only anonymous creation intent.
 - **Headless creation options:** provide current models, supported choices, and
@@ -52,20 +52,19 @@ preview's first-run experience.
 
 The plugin does not define a generic submit endpoint, copy cookies between
 browser profiles, or use `/auth/mcp-connect`. The protected handoff tool requests
-`web:session`; without an operation ID it can only land at the DEV root, and with
+`web:session`; without an operation ID it can only land at the Yoroll root, and with
 one it can only use the succeeded operation's server-verified destination.
 
-## Environment boundary
+## Production environment boundary
 
-This preview is fixed to:
+The plugin is fixed to:
 
 - MCP: `https://mcp.yoroll.ai/mcp`
-- Web: `https://dev.yoroll.ai`
-- API behind MCP: Yoroll test services
+- Web: `https://app.yoroll.ai`
+- API behind MCP: `https://api.lineargame.ai`
 
-Do not repoint it to `app.yoroll.ai`, `api.lineargame.ai`, or a production
-origin. Browser handoffs must come only from the test MCP and are never copied
-into chat.
+Browser handoffs must come only from the production MCP and are never copied
+into chat. Development and production origins must never be mixed.
 
 ## Authentication boundary
 
@@ -90,13 +89,13 @@ Ask Codex desktop to execute the installer:
 
 ```text
 Read the complete INSTALL.md in the Yoroll plugin repository, install or update
-the Yoroll preview plugin, and open the new creation task for me.
+the Yoroll plugin, and open the new creation task for me.
 ```
 
 Chinese:
 
 ```text
-完整阅读 Yoroll 插件仓库里的 INSTALL.md，安装或更新 Yoroll 预览插件，并为我打开新的创作任务。
+完整阅读 Yoroll 插件仓库里的 INSTALL.md，安装或更新 Yoroll 插件，并为我打开新的创作任务。
 ```
 
 The complete execution and fallback contract is in [INSTALL.md](./INSTALL.md).

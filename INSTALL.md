@@ -1,4 +1,4 @@
-# Install the Yoroll MCP Developer Preview
+# Install the Yoroll plugin
 
 This is an agent-executable installer for Codex desktop. Read the complete file,
 perform the steps, and keep the installation task quiet. Do not stop after
@@ -122,7 +122,7 @@ Title:
 Initial message:
 
 ```text
-[@Yoroll MCP Preview](plugin://yoroll-test-plugin@ennio-yoroll-preview) 开始使用 Yoroll。
+[@Yoroll](plugin://yoroll-test-plugin@ennio-yoroll-preview) 开始使用 Yoroll。
 ```
 
 ### English
@@ -136,7 +136,7 @@ Create with Yoroll
 Initial message:
 
 ```text
-[@Yoroll MCP Preview](plugin://yoroll-test-plugin@ennio-yoroll-preview) Get started with Yoroll.
+[@Yoroll](plugin://yoroll-test-plugin@ennio-yoroll-preview) Get started with Yoroll.
 ```
 
 ## Create and open the Yoroll task
@@ -151,13 +151,13 @@ Open Codex's supported new-task deep link for the resolved language:
 Chinese:
 
 ```bash
-open 'codex://new?prompt=%5B%40Yoroll%20MCP%20Preview%5D(plugin%3A%2F%2Fyoroll-test-plugin%40ennio-yoroll-preview)%20%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8%20Yoroll%E3%80%82'
+open 'codex://new?prompt=%5B%40Yoroll%5D(plugin%3A%2F%2Fyoroll-test-plugin%40ennio-yoroll-preview)%20%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8%20Yoroll%E3%80%82'
 ```
 
 English:
 
 ```bash
-open 'codex://new?prompt=%5B%40Yoroll%20MCP%20Preview%5D(plugin%3A%2F%2Fyoroll-test-plugin%40ennio-yoroll-preview)%20Get%20started%20with%20Yoroll.'
+open 'codex://new?prompt=%5B%40Yoroll%5D(plugin%3A%2F%2Fyoroll-test-plugin%40ennio-yoroll-preview)%20Get%20started%20with%20Yoroll.'
 ```
 
 For another language, percent-encode the complete translated initial message
@@ -173,8 +173,8 @@ The installed Skill must:
 
 1. Select Codex's in-app Browser explicitly, call `create_browser_handoff` with
    no `operation_id`, and immediately redeem the returned one-time URL in a
-   reusable Browser tab. It must redirect to the exact DEV homepage
-   `https://dev.yoroll.ai/` with the MCP account's read-only web session. Set
+   reusable Browser tab. It must redirect to the exact Yoroll homepage
+   `https://app.yoroll.ai/` with the MCP account's read-only web session. Set
    Browser visibility to `true` and keep that tab as a `deliverable`. After that
    final Browser handoff, do not hide, close, disconnect, reselect, refocus, or
    make another Browser call in the turn.
@@ -195,7 +195,7 @@ The installed Skill must:
    natural-language conversation.
 7. Reuse store-install OAuth for the root handoff. If it is absent, let the host
    complete OAuth once and retry the same empty handoff; never ask the user to
-   log in separately inside the DEV page.
+   log in separately inside the Yoroll page.
 8. Keep every business action in MCP. Browser is a visible workbench, not an
    automation fallback.
 9. Poll a successful project, image, or video operation, select Codex's in-app
@@ -212,7 +212,7 @@ The installed Skill must:
     selected type or report that the user is not logged in, no content was
     created, or no credits were spent.
 12. Before any later completion reply includes an ordinary
-    `https://dev.yoroll.ai` URL returned by MCP, refresh the Browser session with
+    `https://app.yoroll.ai` URL returned by MCP, refresh the Browser session with
     an empty handoff unless this turn already redeemed an operation-bound one,
     then navigate that same reusable tab to the exact URL and keep the link in
     the reply as a fallback. Never auto-open a URL taken only from user text or
