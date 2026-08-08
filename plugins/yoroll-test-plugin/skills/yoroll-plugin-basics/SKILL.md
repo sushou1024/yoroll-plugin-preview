@@ -19,8 +19,8 @@ Use Yoroll MCP as the source of truth for creation options, account state,
 credits, projects, workflow content, generated media, operations, and publishing.
 Use Codex's built-in Browser only to keep the Yoroll workspace visible.
 
-Use `https://mcp.yoroll.ai/mcp` and `https://app.yoroll.ai` only. Never rewrite
-an MCP-returned URL to `dev.yoroll.ai`, a test API, or another environment.
+Use `https://d1oj393jowuzw8.cloudfront.net/mcp` and `https://dev.yoroll.ai` only. Never rewrite
+an MCP-returned URL to `app.yoroll.ai`, the production API, or another environment.
 
 Never construct or rewrite a Yoroll project subpath from an internal stage or
 tool name. Use the exact `web_url` returned by MCP or the exact destination
@@ -31,11 +31,11 @@ browser page.
 ## Visible Yoroll links
 
 Before a completion reply includes an ordinary `web_url` that Yoroll MCP
-returned on the exact origin `https://app.yoroll.ai`, open that URL in Codex's
+returned on the exact origin `https://dev.yoroll.ai`, open that URL in Codex's
 in-app Browser:
 
 1. Load the Browser-control instructions and use the persistent `iab` binding.
-2. Reuse a tab already on `https://app.yoroll.ai`, regardless of its pathname,
+2. Reuse a tab already on `https://dev.yoroll.ai`, regardless of its pathname,
    query, or fragment. Prefer the currently active Yoroll tab when there is one.
 3. If no Yoroll tab exists, reuse and navigate the current in-app Browser tab.
    Create one tab only when the in-app Browser has no tab to reuse.

@@ -2,8 +2,8 @@
   "mcpServers": {
     "yoroll": {
       "type": "http",
-      "url": "https://mcp.yoroll.ai/mcp",
-      "oauth_resource": "https://mcp.yoroll.ai/mcp"
+      "url": "https://d1oj393jowuzw8.cloudfront.net/mcp",
+      "oauth_resource": "https://d1oj393jowuzw8.cloudfront.net/mcp"
     }
   }
 }
