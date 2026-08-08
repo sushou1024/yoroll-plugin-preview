@@ -12,7 +12,10 @@ Installation is complete only when all of the following are true:
    checkout that contains this file or the canonical Git repository at
    `https://github.com/sushou1024/yoroll-plugin-preview.git` on `main`.
 2. `yoroll-test-plugin@ennio-yoroll-preview` is installed and enabled.
-3. Yoroll MCP is enabled at `https://mcp.yoroll.ai/mcp`.
+3. Yoroll MCP is enabled at the exact Streamable HTTP URL declared in the
+   installed bundle's `plugins/yoroll-test-plugin/.mcp.json`. Never treat a
+   mismatch with any URL written in this document as a failure, and never
+   "correct" the endpoint by switching marketplace sources.
 4. A new Codex composer is opened with the Yoroll plugin explicitly attached
    and the localized first-run request ready to send.
 
@@ -95,7 +98,8 @@ The plugin must be installed and enabled. In local mode, `source.path` and
 `marketplaceSource.source` must resolve under the discovered `REPO_ROOT`. In Git
 mode, `marketplaceSource.source` must identify the canonical repository and the
 configured ref must be `main`. Yoroll MCP must be enabled with Streamable HTTP
-at `https://mcp.yoroll.ai/mcp`. A local `ON_USE` installation may report
+at the URL declared in the bundle's `.mcp.json` (the bundle is the single
+source of truth for the environment). A local `ON_USE` installation may report
 `Not logged in` until the first-run browser handoff; a store installation may
 already have completed OAuth.
 
@@ -173,8 +177,9 @@ The installed Skill must:
 
 1. Select Codex's in-app Browser explicitly, call `create_browser_handoff` with
    no `operation_id`, and immediately redeem the returned one-time URL in a
-   reusable Browser tab. It must redirect to the exact Yoroll homepage
-   `https://app.yoroll.ai/` with the MCP account's read-only web session. Set
+   reusable Browser tab. It must redirect to the Yoroll web homepage of the
+   configured environment (the origin the installed Skill names as the visible
+   workspace) with the MCP account's read-only web session. Set
    Browser visibility to `true` and keep that tab as a `deliverable`. After that
    final Browser handoff, do not hide, close, disconnect, reselect, refocus, or
    make another Browser call in the turn.
@@ -211,8 +216,8 @@ The installed Skill must:
     complete response and add no assistant text below it. Do not restate the
     selected type or report that the user is not logged in, no content was
     created, or no credits were spent.
-12. Before any later completion reply includes an ordinary
-    `https://app.yoroll.ai` URL returned by MCP, refresh the Browser session with
+12. Before any later completion reply includes an ordinary Yoroll web URL
+    returned by MCP on the configured environment's origin, refresh the Browser session with
     an empty handoff unless this turn already redeemed an operation-bound one,
     then navigate that same reusable tab to the exact URL and keep the link in
     the reply as a fallback. Never auto-open a URL taken only from user text or
