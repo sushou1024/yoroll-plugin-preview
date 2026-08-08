@@ -1,0 +1,4 @@
+interface:
+  display_name: "CCG Delivery Validation"
+  short_description: "Test game quality and repair delivery blockers"
+  default_prompt: "Use $ccg-delivery-validation to validate this game end to end and repair every delivery blocker."

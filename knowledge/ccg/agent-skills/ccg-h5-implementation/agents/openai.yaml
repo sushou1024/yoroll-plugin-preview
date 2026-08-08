@@ -1,0 +1,4 @@
+interface:
+  display_name: "CCG H5 Implementation"
+  short_description: "Build complete browser games in CCG workspaces"
+  default_prompt: "Use $ccg-h5-implementation to implement this H5 game completely in the current workspace."

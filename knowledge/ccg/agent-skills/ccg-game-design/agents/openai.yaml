@@ -1,0 +1,4 @@
+interface:
+  display_name: "CCG Game Design"
+  short_description: "Plan a complete, scoped game before implementation"
+  default_prompt: "Use $ccg-game-design to turn this request into a concrete game design and implementation plan."

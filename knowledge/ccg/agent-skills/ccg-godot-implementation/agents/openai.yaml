@@ -1,0 +1,4 @@
+interface:
+  display_name: "CCG Godot Implementation"
+  short_description: "Build and validate Godot games with CCG tools"
+  default_prompt: "Use $ccg-godot-implementation to implement this Godot game completely in the current workspace."

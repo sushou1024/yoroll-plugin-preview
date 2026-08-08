@@ -1,0 +1,4 @@
+interface:
+  display_name: "CCG Media Pipeline"
+  short_description: "Generate and integrate game media through CCG tools"
+  default_prompt: "Use $ccg-media-pipeline to plan, generate, integrate, and verify the media for this game."
