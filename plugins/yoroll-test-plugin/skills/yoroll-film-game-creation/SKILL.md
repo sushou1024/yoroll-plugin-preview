@@ -184,11 +184,17 @@ Chapter（阶段性叙事目标）/ **Episode（一条命运路径上的线性�
 
 ### 4.4 QTE
 
-**核实结论：MCP 目前只能*读* QTE，不能*写* QTE。** `get_scenes` 的 scene 对象带只读 `qte`（`type` / `duration` / `next_node_map` / `target_episode_map` / `options` / `end_type` / `score_effects` 等），但**没有任何 MCP 输入 schema 接受 QTE 字段**——`update_scene` / `add_scene` 的 `transition` 只有 `natural` / `branches` / `end`。（`generate_video` 上的 `qte_project_id` 是独立媒体工具的参数，与工作流 QTE 编辑无关。）因此：
+**QTE 现在可写：`set_scene_qte`。** 语义是**整体替换**（PUT，不是 merge）——改前必须先 `get_scenes` 读回该场景当前的 `qte`，在读回内容的基础上组装完整对象再写，漏写的字段等于删除。必填 `project_id` / `chapter_id` / `scene_id` / `client_request_id` / `qte`（`qte` 至少含 `type` 与 `duration`，且 `duration` > 0）。入参 schema 覆盖全部 **22 种玩法**，但 **`rhythm` 的谱面不可写**（谱面仍由后端管线产出）。结果路由用 `next_node_map`（key 只允许 `"1"` / `"0"` / `"-1"` / `"-2"`）**或** `target_episode_map`，**二选一**。返回 operation，按 §2.1 轮询到终态；支持可选 `expected_revision`。
 
-- QTE 由后端剧情树生成管线产出，或由用户在 Yoroll 页面里自己调。**不要向用户承诺"我来加一个 QTE"**，也不要试图用 `update_scene` 硬塞。
-- 你能做的是：**读回 QTE 判断玩法选得对不对**，以及在生成前把玩法意图写进故事/分镜的互动压力描述里，让管线更可能选对。
-- **判断玩法与情绪是否匹配、密度与难度递进是否合理时，读 `references/qte-reference.md`**（18 种玩法的参数表与递进原则）。核心口径：`click` 决断感、`longpress` 持续压迫、`shoot2` 生死博弈、`balance` 失控恐惧、`tencent_voice` 不可回收的承诺、`insight` 发现的惊喜或恐惧。**相邻 episode 不重复同一玩法。** `next_node_map` 中 `balance` 用 `{"1":成功,"-1":过慢失败,"-2":过快失败}`，其余用 `{"1":成功,"0":失败}`。
+**三条副作用红线（每次调用前必须逐条过）**：
+
+1. **会清掉该场景已有的 transition 分支**——包括带 `lock.credits` 的付费选项锁。想保留选择分支的场景不要写 QTE；确要覆盖时先向用户说明会失去什么。
+2. **QTE 只在 episode 的末尾场景生效**：写到非末尾场景会被服务端**静默清除**（不报错、看似成功）。调用前先 `get_scenes` 确认该 scene 确实是所在 episode 的末尾。
+3. **可能触发自动分集重构**：成功后必须重读 `get_plot_outline`，不要沿用写入前的结构认知继续操作。
+
+**QTE 与 transition 互斥**是设计而非缺陷：一个末尾场景要么走选择分支，要么走玩法分支。现在两个方向都可写——`update_scene` 写选择分支（`transition.branches`），`set_scene_qte` 写玩法分支——且**互相覆盖**：写 QTE 清掉已有分支，重写 transition 同样会顶掉已有 QTE。改任一方向前都先 `get_scenes` 确认现状。
+
+**判断玩法与情绪是否匹配、密度与难度递进是否合理时，读 `references/qte-reference.md`**（各玩法的参数表与递进原则）。核心口径：`click` 决断感、`longpress` 持续压迫、`shoot2` 生死博弈、`balance` 失控恐惧、`tencent_voice` 不可回收的承诺、`insight` 发现的惊喜或恐惧。**相邻 episode 不重复同一玩法。** `next_node_map` 中 `balance` 用 `{"1":成功,"-1":过慢失败,"-2":过快失败}`，其余用 `{"1":成功,"0":失败}`。
 
 ## 5. 局部重做映射
 
@@ -205,6 +211,7 @@ Chapter（阶段性叙事目标）/ **Episode（一条命运路径上的线性�
 | 补某版立绘的三视图 | `regenerate_character_sheet`（需 `version`） | `expected_updated_at` |
 | 全部角色重出图 | `generate_character_images` | `expected_updated_at` |
 | 改某镜头文本 / 分支边 | `update_scene` | `expected_revision` |
+| **改某场景的玩法（QTE）** | `set_scene_qte`（整体替换，红线见 §4.4） | `expected_revision`（可选） |
 | **重生成某镜头的图** | `regenerate_scene_image` | 两者都收，**优先 `expected_revision`** |
 | 给某镜头做首帧 | `generate_first_frame_image` | 两者都收，**优先 `expected_revision`** |
 | **重生成某镜头的视频** | `regenerate_scene_video` | `expected_updated_at` |

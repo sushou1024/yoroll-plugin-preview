@@ -1,12 +1,14 @@
 ---
 name: yoroll-h5-film-game
-description: Build a zero-build browser interactive film game in the user's local workspace — fullscreen video playback, a branching story graph, custom mechanics slots, and custom UI — with media generated through Yoroll MCP and the finished static build published to the platform. Use when the user wants an interactive film, branching video story, FMV-style game, or a film game with custom gameplay or custom interface that they will author as local web files. Do not use for Yoroll's on-platform workflow projects, which yoroll-plugin-basics already covers.
+description: Build a zero-build browser interactive film game in the user's local workspace — fullscreen video playback, a branching story graph, custom mechanics slots, and custom UI — with media generated through Yoroll MCP and the finished static build deployed to the platform via MCP. Use when the user wants an interactive film, branching video story, FMV-style game, or a film game with custom gameplay or custom interface that they will author as local web files. Also use when the user picks 影视小游戏 (mini game) on the creation menu card, i.e. wait_for_creation_intent returns intent=mini_game. Do not use for Yoroll's on-platform workflow projects, which yoroll-plugin-basics already covers.
 ---
 
 # 自定义影视小游戏
 
 用户在本地写一个**网页影视小游戏**：全屏视频 + 分支剧情 + 自己定义的玩法与界面。
-素材通过 Yoroll MCP 生成并下载到本地，成品是一整棵静态目录，发布到平台。
+素材通过 Yoroll MCP 生成并下载到本地，成品是一整棵静态目录，经 MCP 部署到平台。
+除用户直接描述需求外，创作卡片选择「影视小游戏」（`wait_for_creation_intent` 返回
+`intent="mini_game"`）同样进入本 skill。
 
 会话级策略（语言、可见 Yoroll 链接、鉴权、operation 轮询）遵循 `yoroll-plugin-basics`，本 skill 不重复实现。
 
@@ -186,32 +188,49 @@ PROVENANCE.md         模板来源与改造记录（不随发布产物上传）
 打包前删掉只给 agent 看的文件（`design.md`、`delivery_report.json`、`PROVENANCE.md`、
 `assets/media-manifest.json`、任何 `tools/`、`scripts/`、`.env`）。
 
-**发布入口是平台的 upload-game 页面**（工具页 → Upload Game）。以下契约已对照
-`linear-game-web-main` 的 `src/services/gamebuilds.ts` 与 `src/app/[locale]/tool/upload-game/services.ts` 核实：
+**发布走 MCP 全自动完成，用户不需要离开对话。** 第五节验收 `pass` 后按以下顺序执行：
+
+1. **打包**：把发布目录压成一个 zip（结构与校验约束见下表）。
+2. **查 slug**：`check_game_slug`，返回 `{slug, available, reason, quota{deployed_count, deploy_limit,
+   can_deploy_new}}`。**slug 被占用是正常结果，不是错误**——被占用时给用户报几个可选的替代 slug
+   让其挑选；自己已占用同一 slug = 覆盖部署，需向用户确认。`quota.can_deploy_new` 为 false 时先
+   告知用户配额已满，不要硬部署。
+3. **申请上传**：`request_game_upload`，入参 `file_name` 与 `file_size`（**zip 的实际字节数**，用
+   `stat`/`ls -l` 读出来，不许估算；≤ 200 MB，仅接受 `.zip`/`.html`/`.htm`）。返回**一次性**的
+   `upload_id` + `upload_url` + `content_type`，**30 分钟内有效**。
+4. **本地上传**：对 `upload_url` 执行**单次** HTTP PUT，例如
+   `curl -sS -X PUT -H "Content-Type: <返回的 content_type>" --data-binary @build.zip "<upload_url>"`。
+   **`Content-Type` 必须与返回值完全一致，否则 S3 直接 403。** `upload_url` 是一次性凭据：
+   **绝不写进回复、任何文件或日志**，用完即弃；过期或上传失败就重新 `request_game_upload`。
+5. **部署**：`deploy_game`，入参 `client_request_id` / `upload_id` / `slug` / `title`。返回异步
+   operation，按 `yoroll-plugin-basics` 的策略用 `get_operation` 有界退避轮询到终态。
+   **同一 slug 的部署在服务端串行化**，排队属正常，绝不重复提交。
+6. **展示**：成功后拿 `preview_url`（预发地址，立即可玩），按 basics 的可见链接策略在浏览器里
+   展示给用户。已部署的游戏随时可用 `list_game_builds` 查看。
+
+发布前仍要向用户复述"要发布什么、用什么 slug、会覆盖谁"并取得明确同意，才开始上述流程。
+
+产物校验约束（与后端校验一致）：
 
 | 项 | 契约 |
 |---|---|
-| 接口 | `POST /game-builds/deploy`，`multipart/form-data`，字段 `file` / `slug` / `title` |
 | 文件形态 | 单个 `.html`/`.htm`，**或**一个 `.zip` |
 | ZIP 结构 | 必须含 `index.html`，位于压缩包根，或位于**唯一一层**顶级目录下（`MyGame/index.html`） |
 | 体积 | 上传包 ≤ 2 GB；ZIP 内单文件 ≤ 1.8 GB；ZIP 内文件数 ≤ 2000 |
 | 禁止文件 | 可执行/服务端脚本（`.sh` `.py` `.php` `.exe` `.bat` `.jar`）、敏感配置（`.env` `.htaccess` `web.config`） |
 | slug | 3–48 字符，仅小写字母/数字/连字符，`^[a-z0-9]+(-[a-z0-9]+)*$`；保留词不可用（admin、api、www、yoroll 等） |
 | title | ≤ 50 字符 |
-| 配额 | 先查 `GET /game-builds/quota`（`deployed_count` / `deploy_limit` / `can_deploy_new`） |
-| 占用检查 | `GET /game-builds/slug/check?slug=`；自己已占用 = 覆盖部署（需向用户确认），他人占用 = 不可用 |
-| 返回 | `preview_url`（预发 CDN，立即可看）、`build_id`、`live_url`（过审后生效） |
-| 上架流程 | 部署 → `PUT /game-builds/{slug}/publish/profile`（标题、简介、封面、竖版封面、类型标签）→ `POST /game-builds/{slug}/submit` 送审 → 过审后绑定正式域名 `https://{slug}.mimomo.ai` |
 
-发布前的动作顺序：跑完第五节验收 → 打包 zip → 向用户复述"要发布什么、用什么 slug、会覆盖谁"
-并取得明确同意 → 上传 → 拿到 `preview_url` 后按 `yoroll-plugin-basics` 的可见链接策略在浏览器里展示。
+**兜底路径**：MCP 部署链路失败且重试无效时，才降级为引导用户在平台 upload-game 页面
+（工具页 → Upload Game）手动上传同一个 zip，并如实说明失败原因。
+
+**上架送审仍在网页完成**：部署成功只意味着预发地址可玩。标题、简介、封面（横竖两版）、类型标签
+的完善与提交送审在平台网页进行，过审后绑定正式域名 `https://{slug}.mimomo.ai`——到这一步引导
+用户前往网页，不要代劳也不要承诺 MCP 能送审。
 
 **TODO（未核实，落地前必须确认）**
 
-- MCP 服务端当前的工具列表里**没有** upload-game / 部署类工具（只有面向平台 workflow 项目的
-  `validate_publish` / `publish_project` / `get_publish_status`，那条路径不适用于本地自写的静态产物）。
-  因此本 skill 目前只能引导用户在 upload-game 页面完成上传，**agent 无法直接调用发布接口**。
-  是否新增 MCP 发布工具，待产品侧定调。
-- 上表接口来自 Web 前端调用层，未见服务端 OpenAPI 原文；`title` 是否必填、覆盖部署的具体语义、
-  失败错误码，落地前建议与平台侧对一遍。
+- 接口契约：**已实现**——MCP 部署链路对应服务端 `/game-builds/uploads/presign`
+  （`request_game_upload`）与 `/game-builds/deploy-upload`（`deploy_game`），参数与错误语义以
+  MCP schema 为准，无需再走 Web 前端调用层。
 - 内容合规：影视素材涉及肖像与版权，发布前提示用户自查，平台侧的送审规则未在本仓库找到成文依据。
