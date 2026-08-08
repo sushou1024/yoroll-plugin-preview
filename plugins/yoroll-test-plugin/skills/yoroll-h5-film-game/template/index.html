@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>影视小游戏骨架</title>
+  <link rel="stylesheet" href="css/theme.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- 视频舞台：双 <video> 交替，A 播放时 B 预载下一段，切段不黑帧 -->
+    <div id="stage" class="stage">
+      <video id="videoA" class="film-video" playsinline webkit-playsinline preload="auto"></video>
+      <video id="videoB" class="film-video" playsinline webkit-playsinline preload="auto"></video>
+      <img id="poster" class="poster" alt="" />
+      <div id="loading" class="loading" hidden>加载中…</div>
+      <div id="mediaFallback" class="media-fallback" hidden></div>
+    </div>
+    <div id="subtitle" class="subtitle" hidden></div>
+    <div id="overlay" class="overlay"></div>
+    <div id="hud" class="hud">
+      <button id="skipBtn" class="ghost-btn" type="button" hidden>跳过 ▶</button>
+      <button id="soundBtn" class="ghost-btn" type="button" hidden>🔇 开启声音</button>
+    </div>
+    <!-- 开始门：移动端有声播放必须绑在首次用户手势上，这个按钮就是音频解锁点 -->
+    <div id="gate" class="gate">
+      <div class="gate-inner">
+        <h1 id="gateTitle" class="gate-title">影视小游戏骨架</h1>
+        <p id="gateDesc" class="gate-desc">替换 content/story.js 后即可运行你自己的分支影片。</p>
+        <button id="startBtn" class="primary-btn" type="button">开始观看</button>
+        <button id="resumeBtn" class="ghost-btn" type="button" hidden>继续上次进度</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* 运行时错误收集（中立实现）。
+       来源模板在此处向父窗口 postMessage({type:'h5game-error'})，那是 CCG 预览容器专属协议，
+       Yoroll 本地/静态托管场景没有对应接收方，已移除，改为本地收集 + console 输出。 */
+    window.__filmGameErrors = [];
+    function reportError(payload) {
+      window.__filmGameErrors.push(payload);
+      console.error('[FilmGameError]', payload);
+    }
+    window.addEventListener('error', function (e) {
+      reportError({ message: e.message, source: e.filename, line: e.lineno, col: e.colno, stack: e.error && e.error.stack });
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      reportError({ message: 'unhandledrejection: ' + ((e.reason && e.reason.message) || e.reason), stack: e.reason && e.reason.stack });
+    });
+  </script>
+
+  <script src="js/platform.js"></script>
+  <script src="js/engine/save.js"></script>
+  <script src="js/engine/story.js"></script>
+  <script src="js/ui/render.js"></script>
+  <script src="js/slots/registry.js"></script>
+  <script src="content/story.js"></script>
+  <script src="js/boot.js"></script>
+
+  <script>
+  /* ghost-overlay guard（自源模板保留，通用鲁棒性，勿删）：连续点击被同一个「全屏且视觉不可见、
+     无内容」的元素吞掉时，自动解除它的点击拦截——防止弹层/遮罩关闭不彻底把整页锁死。 */
+  (function () {
+    var lastEl = null, hits = 0, lastT = 0;
+    document.addEventListener('click', function (e) {
+      var el = e.target, now = Date.now();
+      if (el === lastEl && now - lastT < 2500) hits++; else hits = 1;
+      lastEl = el; lastT = now;
+      if (hits < 2) return;
+      try {
+        if (!el || el === document.body || el === document.documentElement) return;
+        var tag = el.tagName;
+        if (tag === 'CANVAS' || tag === 'VIDEO' || tag === 'IMG' || tag === 'BUTTON' || tag === 'INPUT' || tag === 'A') return;
+        var r = el.getBoundingClientRect();
+        if (r.width < innerWidth * 0.85 || r.height < innerHeight * 0.85) return;
+        var cs = getComputedStyle(el);
+        var bg = cs.backgroundColor || '';
+        var m = bg.match(/rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*([0-9.]+))?\)/);
+        var bgAlpha = m ? (m[1] === undefined ? 1 : parseFloat(m[1])) : (bg === 'transparent' ? 0 : 1);
+        var invisible = bgAlpha < 0.05 || parseFloat(cs.opacity) < 0.05 || cs.visibility === 'hidden';
+        var hasContent = (el.innerText || '').trim().length > 0 ||
+          el.querySelector('img,canvas,video,button,input,select,textarea,a');
+        if (invisible && !hasContent) {
+          el.style.pointerEvents = 'none';
+          if (window.console) console.warn('[guard] 幽灵遮罩已解除点击拦截:', el);
+          hits = 0;
+        }
+      } catch (_) {}
+    }, false);
+  })();
+  </script>
+</body>
+</html>

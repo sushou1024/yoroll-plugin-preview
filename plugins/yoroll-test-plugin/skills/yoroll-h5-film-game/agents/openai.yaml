@@ -1,0 +1,12 @@
+interface:
+  display_name: "Yoroll Film Game — Custom H5"
+  short_description: "Build a zero-build browser interactive film game with custom gameplay"
+  default_prompt: "Use $yoroll-h5-film-game to design, build, validate, and publish an interactive film game in the current workspace: fullscreen video, a branching story graph, custom mechanics slots, and Yoroll-generated media downloaded into local assets."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "yoroll"
+      description: "Yoroll OAuth MCP server"
+      transport: "streamable_http"
+      url: "https://mcp.yoroll.ai/mcp"

@@ -1,0 +1,12 @@
+interface:
+  display_name: "Yoroll Media"
+  short_description: "Generate standalone Yoroll images, videos, voiceover, and BGM"
+  default_prompt: "Use $yoroll-media-generation to turn a one-line request into a polished prompt, pick safe parameters from the live model catalog, submit and poll the generation, and present results in producer language."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "yoroll"
+      description: "Yoroll OAuth MCP server"
+      transport: "streamable_http"
+      url: "https://mcp.yoroll.ai/mcp"

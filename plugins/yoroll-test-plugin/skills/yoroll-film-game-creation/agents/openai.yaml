@@ -1,0 +1,12 @@
+interface:
+  display_name: "Yoroll Film Game"
+  short_description: "Author a complete interactive film game end to end"
+  default_prompt: "Use $yoroll-film-game-creation to collect the premise, drive every Yoroll workflow stage from story to publish, judge each stage's creative quality, design branches and QTE beats, and keep the user-facing reply in producer language."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "yoroll"
+      description: "Yoroll OAuth MCP server"
+      transport: "streamable_http"
+      url: "https://mcp.yoroll.ai/mcp"
