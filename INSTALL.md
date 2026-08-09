@@ -146,30 +146,39 @@ Initial message:
 ## Create and open the Yoroll task
 
 The newly installed plugin is not loaded into the installation task. A new
-plugin-backed task is mandatory. A plain `create_thread` prompt does not attach
-the plugin, even when its text contains the plugin Markdown reference, so do not
-use task-management tools for this handoff.
+plugin-backed task is mandatory, and its first user message must actually be
+sent — a created-but-empty task, a drafted-but-unsent composer, or a printed
+link does not complete this handoff.
 
-Open Codex's supported new-task deep link for the resolved language:
+**Primary path — create the task and send the first message yourself.** Use
+`tool_search` to find the host's ordinary task-management tools
+(`create_thread`, `send_message_to_thread`, `set_thread_title`,
+`navigate_to_codex_page`). Do not call any task-creation tool whose name or
+parameters mention `worktree`, `cloud`, or `branch` — the task must be an
+ordinary local foreground task. Create the new task with the localized first
+message below as the initial user message, sent immediately (if `create_thread`
+cannot carry an initial message, call `send_message_to_thread` right after
+creating it), then navigate the app to that task:
 
-Chinese:
+Chinese: `[@Yoroll](plugin://yoroll-test-plugin@ennio-yoroll-preview) 开始使用 Yoroll。`
+
+English: `[@Yoroll](plugin://yoroll-test-plugin@ennio-yoroll-preview) Get started with Yoroll.`
+
+For another language, translate the message text but never alter the plugin
+Markdown reference. After sending, verify the new task shows the orange Yoroll
+plugin chip on that first message; if the chip is missing, report that and use
+the fallback below.
+
+**Fallback only** — when the host exposes no ordinary task-management tools or
+the calls fail: open the new-task deep link for the resolved language and tell
+the user to press send once (the deep link can only prefill; it cannot send):
 
 ```bash
 open 'codex://new?prompt=%5B%40Yoroll%5D(plugin%3A%2F%2Fyoroll-test-plugin%40ennio-yoroll-preview)%20%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8%20Yoroll%E3%80%82'
 ```
 
-English:
-
-```bash
-open 'codex://new?prompt=%5B%40Yoroll%5D(plugin%3A%2F%2Fyoroll-test-plugin%40ennio-yoroll-preview)%20Get%20started%20with%20Yoroll.'
-```
-
-For another language, percent-encode the complete translated initial message
-as the `prompt` query parameter without changing the plugin Markdown reference.
-The deep link must show the orange Yoroll plugin chip in the composer. The host
-does not expose a supported way for an installer task to silently send a newly
-attached plugin prompt, so leave the localized request ready and ask the user to
-send it once. Do not replace this with an unbacked automatically sent task.
+(English variant: replace the encoded text with
+`%20Get%20started%20with%20Yoroll.`)
 
 ## First-run behavior in the new task
 
@@ -228,7 +237,17 @@ onboarding or creation cards.
 
 ## Required report
 
-After the plugin-backed composer is open, report only the matching short result:
+Primary path succeeded (task created, first message sent, chip present):
+
+```text
+Yoroll 已安装，创作任务已经开始，直接在新任务里继续即可。
+```
+
+```text
+Yoroll is installed and your creation task has started; continue in the new task.
+```
+
+Fallback path (deep link, message prefilled but unsent):
 
 ```text
 Yoroll 已安装，新的创作任务已准备好；请发送预填消息。
@@ -238,8 +257,8 @@ Yoroll 已安装，新的创作任务已准备好；请发送预填消息。
 Yoroll is installed and the new creation task is ready; send the prefilled message once.
 ```
 
-Do not report success before the Yoroll plugin chip and localized request are
-present in the new composer.
+Do not report primary-path success before the first message is actually sent
+and the Yoroll plugin chip is visible on it.
 
 ## Authentication boundary
 
