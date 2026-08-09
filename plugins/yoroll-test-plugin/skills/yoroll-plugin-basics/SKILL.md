@@ -195,7 +195,17 @@ running; then continue polling without resubmitting the business tool.
    `create_browser_handoff` with an empty object for the browser-session
    bootstrap described above. It exchanges the existing MCP identity for a
    short-lived one-time Yoroll URL and does not perform a business action.
-3. **In-browser session login (primary path).** When a protected tool fails
+3. **Pre-warm login at the spend-confirmation moment.** Just before asking
+   the user to confirm a credit-consuming plan, silently probe authorization
+   with one read call (`get_account`). If it is unauthorized, open the returned
+   `login_url` in the in-app Browser first, then ask for confirmation in the
+   same message, telling the user the login page is already open on the right
+   and that replying to confirm will start immediately after signing in — the
+   user's reading-and-deciding pause absorbs the login. Keep polling
+   `wait_for_login` while waiting for the reply. Never probe earlier than the
+   first spend decision, and never block card browsing or idea collection on
+   authorization.
+4. **In-browser session login (primary path).** When a protected tool fails
    with an unauthorized error whose metadata includes a `login_url`: open that
    exact `login_url` in Codex's in-app Browser under the reusable-tab policy
    above (never in the system browser, never quoted in chat — the link is
@@ -206,17 +216,17 @@ running; then continue polling without resubmitting the business tool.
    the Yoroll page once; on later conversations the same link completes
    instantly from the browser's existing login. After login the Browser tab is
    a genuinely signed-in Yoroll workspace — keep it as the visible workbench.
-4. If the unauthorized error carries no `login_url`, fall back to the
+5. If the unauthorized error carries no `login_url`, fall back to the
    standard OAuth challenge: the Codex host owns authorization, PKCE, callback
    handling, and token storage; do not construct an authorization URL yourself.
    After authorization, retry the identical tool call only when the host did
    not resume it automatically, using the same `client_request_id`.
-5. Never ask for a password, verification code, cookie, consent code, access
+6. Never ask for a password, verification code, cookie, consent code, access
    token, or refresh token in chat.
-6. Do not open `/auth/mcp-connect`, call the legacy
+7. Do not open `/auth/mcp-connect`, call the legacy
    `approve_browser_session` tool, or treat the visible Yoroll-page login state as
    the MCP authorization state.
-7. Do not treat authentication consent as approval to spend credits, delete
+8. Do not treat authentication consent as approval to spend credits, delete
    content, or publish.
 
 ## Visible Yoroll handoff
