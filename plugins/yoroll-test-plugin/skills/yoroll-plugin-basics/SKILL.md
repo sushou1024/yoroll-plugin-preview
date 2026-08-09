@@ -103,8 +103,8 @@ available creation options:
    refocus the Browser, and do not perform another Browser action in the turn.
 10. Call `render_creation_menu` in the same assistant turn.
 11. Use exactly one compact welcome paragraph as the user-visible final reply.
-   For Chinese use: `Yoroll 插件已经安装好了。现在你可以使用 Yoroll 创建互动影游，也可以用它生成图片和视频；有其他需求也可以直接告诉我。`
-   For English use: `The Yoroll plugin is installed. You can now use Yoroll to create interactive film games or generate images and videos; you can also tell me about any other request.`
+   For Chinese use: `Yoroll 插件已经装好了。你可以创作互动影游、做自定义玩法的影视小游戏，也可以生成图片和视频——在卡片上选一个方向，或者直接说你的想法。`
+   For English use: `The Yoroll plugin is installed. You can create an interactive film game, build a web film mini game with custom gameplay, or generate images and videos — pick a direction on the card, or just describe what you want.`
    Translate the English version faithfully for other resolved languages.
 12. Do not add bullets, headings, a second question, “Yoroll workspace is open”, or
    any explanation below the creation card. The card is the selection surface.
@@ -122,7 +122,12 @@ dialogue-speech or background-music generation in first-run onboarding.
   about six consecutive `pending` results (~2 minutes), stop polling and end
   the turn with one short line inviting the user to pick an option on the
   card or just describe what they want; do not keep the task spinning
-  indefinitely and do not treat the timeout as an error.
+  indefinitely and do not treat the timeout as an error. **After such a
+  timeout, when the user's next message arrives — whatever it says — first
+  call `wait_for_creation_intent` once with the stored session_id**: a late
+  card submission may already be waiting and takes precedence as the chosen
+  intent; if it returns pending or the session is gone, just follow the
+  user's message.
 - When the user explicitly asks for an interactive game, image, or video, skip
   the menu, call `get_creation_options` for that intent and resolved language,
   and collect the required parameters through conversation.
