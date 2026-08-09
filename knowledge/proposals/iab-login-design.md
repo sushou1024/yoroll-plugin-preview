@@ -28,10 +28,10 @@
 
 ```
 1. 新会话 initialize → 服务端（会话模式）分配 Mcp-Session-Id，Codex 自动在后续所有请求携带
-2. 未授权调用受保护工具 → 返回 login_url（绑定当前 MCP 会话的一次性 ticket，10 分钟有效）
+2. 未授权调用受保护工具 → 返回 login_url（绑定当前 MCP 会话的一次性 ticket，90 秒有效）
 3. Agent 把 login_url 开在 IAB → dev.yoroll.ai 登录页（现成）
-   · 首次：正常登录 + 点一次「授权此对话」
-   · 之后：浏览器 cookie 尚在 → 页面只剩一键「授权此对话」（显式点击防会话固定攻击，不做零点击）
+   · 首次：正常登录，登录完成即自动绑定
+   · 之后：浏览器 cookie 尚在 → 打开即自动绑定，零点击（产品决策；风险由 ticket 90 秒时效 + 单次使用 + skill 只准打开本会话链接兜底）
 4. 服务端把平台会话铸成【全权】MCP 授权，绑定到该 Mcp-Session-Id（Redis）
 5. Agent 调 wait_for_login 长轮询（服务端攥单 ≤20s，pending 则同参重调）→ 授权完成即返回
 6. Agent 重试原工具 → 成功，对话续跑。用户全程零输入
@@ -43,11 +43,11 @@
 
 保留：
 - **凭据不进对话**：会话相关性走 `Mcp-Session-Id`（传输层），ticket 单次使用短时效，对话里只出现过一个一次性登录 URL（打开即作废）
-- **绑定需显式点击**（防他人 ticket 被诱导打开后静默绑走账号）
 - 花积分/发布前确认（skill 既有行为）、服务端限流、授权可撤销（网页登出 / TTL）
 
 放弃（经产品决策）：
 - 分级授权——登录即全权，与现行 OAuth 的 scope 范围一致，不加码
+- 绑定确认点击——零点击自动绑定；残余风险（他人 ticket 被诱导在已登录浏览器中打开导致账号绑至他人对话）已知会，由 90 秒时效、单次使用、skill 链接来源硬规则与授权可见可撤销共同缓释
 
 ## 五、改动清单与开放问题
 
@@ -56,7 +56,7 @@
 2. mcpauth 新增：ticket 签发（绑 Mcp-Session-Id）、登录页回调铸 grant、grant 按会话解析（与现有 Bearer 解析并存）
 3. 新工具 `wait_for_login`（长轮询，复用 wait_for_creation_intent 的实现模式）
 4. 未授权错误里附带 login_url
-5. 前端登录页加「授权此对话」确认位（一小块 UI）
+（无前端改动——零点击绑定后，登录页现状即可用）
 
 插件侧（跟进）：basics skill 的授权节改写为"开 login_url 于 IAB → wait_for_login → 重试"；删除 handoff 引导。
 
