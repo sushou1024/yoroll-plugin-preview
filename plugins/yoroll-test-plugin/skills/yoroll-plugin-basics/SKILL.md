@@ -77,14 +77,15 @@ available creation options:
    Do not use URL-based/default browser selection or Chrome for this first-run
    handoff.
 5. Call `create_browser_handoff` with an empty object. If it returns an
-   unauthorized error — with or without a `login_url` — **skip the browser
-   bootstrap entirely and do not open any login page during first-run**:
-   proceed straight to the public creation card. Browsing the card never
-   requires login; the session login happens later, at the first
-   spend-confirmation (pre-warm rule) or the first protected business call.
-   When the call succeeds, it is a session bootstrap only: it does not create
-   content, spend credits, list projects, or accept a client-selected
-   destination.
+   unauthorized error — with or without a `login_url` — **do not open any
+   login page during first-run**. Instead navigate the reusable in-app
+   Browser tab to the plain public homepage `https://dev.yoroll.ai` (an
+   anonymous view is fine as the visible workspace), then proceed to the
+   public creation card. Browsing the card never requires login;
+   authorization happens later, at the first spend-confirmation or the first
+   protected business call. When the handoff call succeeds, it is a session
+   bootstrap only: it does not create content, spend credits, list projects,
+   or accept a client-selected destination.
 6. Claim an existing Yoroll tab when one is already open; otherwise reuse
    the current in-app Browser tab, creating one only when no tab exists. Navigate
    that tab immediately to the exact returned `handoff_url`, wait for its
@@ -116,7 +117,12 @@ dialogue-speech or background-music generation in first-run onboarding.
 ## Route the user's intent
 
 - When the user has not selected a creation type, call
-  `render_creation_menu` with the resolved language.
+  `render_creation_menu` with the resolved language. After rendering, wait
+  for the card with `wait_for_creation_intent`, but **bound the wait**: after
+  about six consecutive `pending` results (~2 minutes), stop polling and end
+  the turn with one short line inviting the user to pick an option on the
+  card or just describe what they want; do not keep the task spinning
+  indefinitely and do not treat the timeout as an error.
 - When the user explicitly asks for an interactive game, image, or video, skip
   the menu, call `get_creation_options` for that intent and resolved language,
   and collect the required parameters through conversation.
@@ -199,32 +205,36 @@ running; then continue polling without resubmitting the business tool.
    `create_browser_handoff` with an empty object for the browser-session
    bootstrap described above. It exchanges the existing MCP identity for a
    short-lived one-time Yoroll URL and does not perform a business action.
-3. **Pre-warm login at the spend-confirmation moment.** Just before asking
-   the user to confirm a credit-consuming plan, silently probe authorization
-   with one read call (`get_account`). If it is unauthorized, open the returned
-   `login_url` in the in-app Browser first, then ask for confirmation in the
-   same message, telling the user the login page is already open on the right
-   and that replying to confirm will start immediately after signing in — the
-   user's reading-and-deciding pause absorbs the login. Keep polling
-   `wait_for_login` while waiting for the reply. Never probe earlier than the
-   first spend decision, and never block card browsing or idea collection on
-   authorization.
-4. **In-browser session login (primary path).** When a protected tool fails
-   with an unauthorized error whose metadata includes a `login_url`: open that
-   exact `login_url` in Codex's in-app Browser under the reusable-tab policy
-   above (never in the system browser, never quoted in chat — the link is
-   single-use), then immediately call `wait_for_login` in the same model turn
-   and keep re-calling it while it returns `pending`, without ending the turn
-   or printing a waiting message. When it returns `authorized`, retry the tool
-   that was rejected with the same `client_request_id`. The user signs in on
-   the Yoroll page once; on later conversations the same link completes
-   instantly from the browser's existing login. After login the Browser tab is
-   a genuinely signed-in Yoroll workspace — keep it as the visible workbench.
-5. If the unauthorized error carries no `login_url`, fall back to the
-   standard OAuth challenge: the Codex host owns authorization, PKCE, callback
-   handling, and token storage; do not construct an authorization URL yourself.
-   After authorization, retry the identical tool call only when the host did
-   not resume it automatically, using the same `client_request_id`.
+3. **Pre-warm authorization at the spend-confirmation moment, in two
+   phases.** Just before asking the user to confirm a credit-consuming plan,
+   silently probe authorization with one read call (`get_account`). If it is
+   unauthorized, start the host authorization (rule 4), present the spend
+   confirmation in the same message — telling the user to finish the
+   sign-in that just opened and then reply to confirm — and **end the turn**.
+   Never keep polling any wait tool while a user reply is pending: waiting
+   for the user and calling tools do not mix. When the user replies, verify
+   authorization with one `get_account` call, then proceed. Never probe
+   earlier than the first spend decision, and never block card browsing or
+   idea collection on authorization.
+4. **Host OAuth (primary path).** When a protected tool fails with an
+   unauthorized error, let the host's standard OAuth challenge drive
+   authorization first; the Codex host owns authorization, PKCE, callback
+   handling, and token storage — never construct an authorization URL
+   yourself. If the host does not surface an authorization prompt, run the
+   bundled CLI once from the shell:
+   `/Applications/ChatGPT.app/Contents/Resources/codex mcp login yoroll`
+   (kill any lingering `codex mcp login` process first), tell the user to
+   complete the sign-in and consent pages in the browser window that opens,
+   and end the turn. When the user replies, verify with `get_account` and
+   retry the rejected tool with the same `client_request_id`. This
+   authorization persists across tasks and sessions.
+5. Treat an unauthorized error's `login_url` as a secondary path only: use
+   it when host OAuth is unavailable and the deployment's session login is
+   known to work. Open the exact `login_url` in the in-app Browser (never the
+   system browser, never quoted in chat — it is single-use), call
+   `wait_for_login` up to three times, and if it still returns `pending`,
+   stop polling, ask the user to finish signing in, and end the turn instead
+   of looping.
 6. Never ask for a password, verification code, cookie, consent code, access
    token, or refresh token in chat.
 7. Do not open `/auth/mcp-connect`, call the legacy
