@@ -221,10 +221,16 @@ link does not complete this handoff.
 (`create_thread`, `send_message_to_thread`, `set_thread_title`,
 `navigate_to_codex_page`). Do not call any task-creation tool whose name or
 parameters mention `worktree`, `cloud`, or `branch` — the task must be an
-ordinary local foreground task. Create the new task with the localized first
-message below as the initial user message, sent immediately (if `create_thread`
-cannot carry an initial message, call `send_message_to_thread` right after
-creating it), then navigate the app to that task:
+ordinary local foreground task. **Create the task in the same workspace as
+this installation task**: pass `REPO_ROOT` through whichever
+workspace/path/project parameter `create_thread` exposes, so the new task
+appears under the same project in the sidebar instead of the global recents.
+Create it with the localized first message below as the initial user message,
+sent immediately (if `create_thread` cannot carry an initial message, call
+`send_message_to_thread` right after creating it), then navigate the app to
+that task. After creation, verify the task is grouped under the same project;
+if `create_thread` exposes no workspace binding at all, prefer the deep-link
+fallback below (which does bind via `path`) over an unbound task:
 
 Chinese: `[@Yoroll](plugin://yoroll-test-plugin@ennio-yoroll-preview) 开始使用 Yoroll。`
 
@@ -235,12 +241,14 @@ Markdown reference. After sending, verify the new task shows the orange Yoroll
 plugin chip on that first message; if the chip is missing, report that and use
 the fallback below.
 
-**Fallback only** — when the host exposes no ordinary task-management tools or
-the calls fail: open the new-task deep link for the resolved language and tell
-the user to press send once (the deep link can only prefill; it cannot send):
+**Fallback only** — when the host exposes no ordinary task-management tools,
+the calls fail, or `create_thread` cannot bind a workspace: open the new-task
+deep link for the resolved language with `path` set to the percent-encoded
+`REPO_ROOT` (this binds the task to the same workspace), and tell the user to
+press send once (the deep link can only prefill; it cannot send):
 
 ```bash
-open 'codex://new?prompt=%5B%40Yoroll%5D(plugin%3A%2F%2Fyoroll-test-plugin%40ennio-yoroll-preview)%20%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8%20Yoroll%E3%80%82'
+open "codex://new?path=$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1],safe=""))' "$REPO_ROOT")&prompt=%5B%40Yoroll%5D(plugin%3A%2F%2Fyoroll-test-plugin%40ennio-yoroll-preview)%20%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8%20Yoroll%E3%80%82"
 ```
 
 (English variant: replace the encoded text with
