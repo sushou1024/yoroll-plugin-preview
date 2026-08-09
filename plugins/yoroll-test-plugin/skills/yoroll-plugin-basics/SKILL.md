@@ -76,11 +76,15 @@ available creation options:
 4. Select Codex's in-app Browser explicitly with the persistent `iab` binding.
    Do not use URL-based/default browser selection or Chrome for this first-run
    handoff.
-5. Call `create_browser_handoff` with an empty object. Reuse the authorization
-   established during plugin installation; if the host still requires OAuth,
-   let the host complete it and then retry this same no-argument handoff once.
-   This is a session bootstrap only: it does not create content, spend credits,
-   list projects, or accept a client-selected destination.
+5. Call `create_browser_handoff` with an empty object. If it returns an
+   unauthorized error — with or without a `login_url` — **skip the browser
+   bootstrap entirely and do not open any login page during first-run**:
+   proceed straight to the public creation card. Browsing the card never
+   requires login; the session login happens later, at the first
+   spend-confirmation (pre-warm rule) or the first protected business call.
+   When the call succeeds, it is a session bootstrap only: it does not create
+   content, spend credits, list projects, or accept a client-selected
+   destination.
 6. Claim an existing Yoroll tab when one is already open; otherwise reuse
    the current in-app Browser tab, creating one only when no tab exists. Navigate
    that tab immediately to the exact returned `handoff_url`, wait for its
