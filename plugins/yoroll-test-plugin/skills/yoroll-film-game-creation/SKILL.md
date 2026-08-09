@@ -1,6 +1,6 @@
 ---
 name: yoroll-film-game-creation
-description: Author a complete Yoroll interactive film game end to end — collect the premise, create the project, drive the story, character, plot-tree, scene, image, video and UI stages, judge each stage's creative quality, design branches and QTE beats, redo single scenes or shots, and run the publish preflight. Use when the user asks Yoroll to create, continue, extend, rewrite, or publish an interactive film game, interactive short drama, branching story game, 互动影游, 互动短剧, or 分支剧情游戏. Do not trigger for standalone image or video generation, for plain story text the user wants written in chat, or for non-Yoroll creation requests.
+description: Author a complete Yoroll interactive film game end to end — collect the premise, create the project, drive the story, character, plot-tree, scene, image, video and UI stages, judge each stage's creative quality, design branches and QTE beats, redo single scenes or shots, and run the publish preflight. Use when the user asks Yoroll to create, continue, extend, rewrite, or publish an interactive film game, interactive short drama, branching story game, 互动影游, 互动短剧, or 分支剧情游戏. Do not trigger for standalone image or video generation, for plain story text the user wants written in chat, for non-Yoroll creation requests, or for local web mini games with custom gameplay or custom UI that the user will author as local code files — that is yoroll-h5-film-game's job, not this skill's.
 ---
 
 # Yoroll 影游创作
@@ -10,6 +10,43 @@ description: Author a complete Yoroll interactive film game end to end — colle
 **职责边界**：本 skill 只负责「创作什么、怎么判断好坏、按什么顺序调工具」。
 浏览器打开 / 标签复用 / handoff / 语言解析 / 意图路由 / 认证，全部沿用
 `yoroll-plugin-basics`，需要开窗时**引用它的策略，不要在这里重复或改写**。
+
+**影游线的一切产物都由平台工具生成**——剧本、角色、分镜、图、视频、UI，没有例外。
+UI 由 `generate_ui` 阶段产出（微调走 `update_ui_config`），**绝不亲手写任何 UI 代码或
+游戏代码，绝不在用户机器上创建任何本地代码文件**（HTML/CSS/JS/工程目录一律不许）。
+影游项目里出现"想改界面/想加玩法"的诉求，对应的永远是平台工具
+（`update_ui_config` / `generate_ui` / `set_scene_qte`），不是写代码。
+
+用户在影游项目创作中途提出"自定义玩法""自定义界面""我想自己写代码"这类诉求时：
+**明确告知这属于「影视小游戏」线**（本地代码工程，走 `yoroll-h5-film-game` skill），
+并确认是否切换。切换 = 另起 `yoroll-h5-film-game` 的完整流程做一个新的本地工程，
+**不是在当前影游项目里混做**——workflow 项目里没有"顺手写点代码"这个选项。
+用户不切换，就继续用平台工具在影游线内满足诉求。判断分界时读下方
+「与另一条线的分界」。
+
+## 与另一条线的分界
+
+Yoroll 有两条互不混用的创作线。本 skill 是**平台影游**线；**影视小游戏**线由
+`yoroll-h5-film-game` 承载。一次创作只走一条线，产物形态、生产方式、发布链路完全不同：
+
+| | 平台影游（本 skill） | 影视小游戏（`yoroll-h5-film-game`） |
+|---|---|---|
+| 生产方式 | 平台 workflow 工具生成一切产物 | Agent 在用户工作区写本地代码工程 |
+| 工程骨架 | 无本地文件，全部在平台项目里 | 拷贝 `template/` 骨架到本地 |
+| UI | `generate_ui` 生成、`update_ui_config` 调整 | 亲手写 `css/theme.css` + `js/ui/` |
+| 玩法互动 | `update_scene` 分支 + `set_scene_qte` | `js/slots/` 自定义玩法插槽 |
+| 素材 | workflow 阶段内部生成并自动挂载 | 经 MCP 生成后拉取到本地 `assets/` |
+| 发布 | `validate_publish` → `publish_project` | 打包 zip → `deploy_game` |
+| 最终产物 | Unity 打包发布的平台作品 | 部署到平台的静态网页 |
+
+**易混场景的正确路由**：
+
+- 影游项目里用户说"换个 UI 风格 / 界面重新做一版" → `update_ui_config` / `generate_ui`，
+  **不写任何代码**。
+- 影游项目里用户说"这一场加个反应挑战 / 玩法" → `set_scene_qte`（红线见 §4.4），
+  不是写玩法插槽。
+- 用户说"我想要一个界面和玩法完全自己定义的网页小游戏" → 这是影视小游戏线，
+  确认后**切换到 `yoroll-h5-film-game` 的流程另起本地工程**，不在当前影游项目里混做。
 
 ## 0. 三条铁律
 

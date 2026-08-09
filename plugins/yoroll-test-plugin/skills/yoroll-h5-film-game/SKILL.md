@@ -1,6 +1,6 @@
 ---
 name: yoroll-h5-film-game
-description: Build a zero-build browser interactive film game in the user's local workspace — fullscreen video playback, a branching story graph, custom mechanics slots, and custom UI — with media generated through Yoroll MCP and the finished static build deployed to the platform via MCP. Use when the user wants an interactive film, branching video story, FMV-style game, or a film game with custom gameplay or custom interface that they will author as local web files. Also use when the user picks 影视小游戏 (mini game) on the creation menu card, i.e. wait_for_creation_intent returns intent=mini_game. Do not use for Yoroll's on-platform workflow projects, which yoroll-plugin-basics already covers.
+description: Build a zero-build browser interactive film game in the user's local workspace — fullscreen video playback, a branching story graph, custom mechanics slots, and custom UI — with media generated through Yoroll MCP and the finished static build deployed to the platform via MCP. Use only when the user explicitly wants a local web mini film game with custom gameplay or custom interface authored as local web files, or when the user picks 影视小游戏 (mini game) on the creation menu card, i.e. wait_for_creation_intent returns intent=mini_game. Never trigger during the creation of a Yoroll on-platform workflow film game project — those projects generate everything, including UI and QTE gameplay, through platform tools (yoroll-film-game-creation), and mentioning UI or gameplay tweaks there does not mean writing local code.
 ---
 
 # 自定义影视小游戏
@@ -11,6 +11,39 @@ description: Build a zero-build browser interactive film game in the user's loca
 `intent="mini_game"`）同样进入本 skill。
 
 会话级策略（语言、可见 Yoroll 链接、鉴权、operation 轮询）遵循 `yoroll-plugin-basics`，本 skill 不重复实现。
+
+**触发硬边界**：本 skill 只在两种情况下启用——用户**明确要求**做"自定义玩法/自定义界面
+的本地网页影视小游戏"，或创作卡返回 `intent="mini_game"`。**绝不要在平台 workflow
+影游项目的创作过程中被触发。** 判定信号：当前语境里存在 workflow 项目（已 `create_project`、
+在谈剧本/角色/分镜/出片/发布）就是平台影游线的地盘——此时用户提到"改 UI""换界面风格"
+"加个玩法"，指的都是平台工具（`update_ui_config` / `generate_ui` / `set_scene_qte`），
+**回到影游线的流程去做，不要开始写本地代码、不要创建任何本地工程文件**。只有用户明确
+表示要**另做一个**自定义玩法/界面的本地网页小游戏并确认切换后，才进入本 skill 的流程。
+
+## 与另一条线的分界
+
+Yoroll 有两条互不混用的创作线。本 skill 是**影视小游戏**线；**平台影游**线由
+`yoroll-film-game-creation` 承载。一次创作只走一条线，产物形态、生产方式、发布链路完全不同：
+
+| | 平台影游（`yoroll-film-game-creation`） | 影视小游戏（本 skill） |
+|---|---|---|
+| 生产方式 | 平台 workflow 工具生成一切产物 | Agent 在用户工作区写本地代码工程 |
+| 工程骨架 | 无本地文件，全部在平台项目里 | 拷贝 `template/` 骨架到本地 |
+| UI | `generate_ui` 生成、`update_ui_config` 调整 | 亲手写 `css/theme.css` + `js/ui/` |
+| 玩法互动 | `update_scene` 分支 + `set_scene_qte` | `js/slots/` 自定义玩法插槽 |
+| 素材 | workflow 阶段内部生成并自动挂载 | 经 MCP 生成后拉取到本地 `assets/` |
+| 发布 | `validate_publish` → `publish_project` | 打包 zip → `deploy_game` |
+| 最终产物 | Unity 打包发布的平台作品 | 部署到平台的静态网页 |
+
+**易混场景的正确路由**：
+
+- 影游项目里用户说"换个 UI 风格 / 界面重新做一版" → 平台线的 `update_ui_config` /
+  `generate_ui`，**不进入本 skill、不写代码**。
+- 影游项目里用户说"这一场加个反应挑战 / 玩法" → 平台线的 `set_scene_qte`，
+  不是本 skill 的玩法插槽。
+- 用户说"我想要一个界面和玩法完全自己定义的网页小游戏"（或创作卡选了影视小游戏）→
+  这才是本 skill：另起本地工程走完整流程，成品经 `deploy_game` 发布为网页，
+  **不要**拿平台影游项目的 `publish_project` 来发布它。
 
 ## 选中「影视小游戏」后的开场引导
 
