@@ -8,17 +8,18 @@ printing commands.
 
 Installation is complete only when all of the following are true:
 
-1. The `ennio-yoroll-preview` marketplace is configured from either the local
-   checkout that contains this file or the canonical Git repository at
-   `https://github.com/sushou1024/yoroll-plugin-preview.git` on `main`.
-2. `yoroll-test-plugin@ennio-yoroll-preview` is installed and enabled. In
-   local-checkout mode it must report exactly the version minted by
-   `scripts/refresh-plugin-version.sh` during this run.
-3. Yoroll MCP is enabled at the exact Streamable HTTP URL declared in the
+1. In local-checkout mode, `scripts/install.sh` exited 0 and printed
+   `INSTALL_OK version=<v>` as its final line (the script configures the
+   `ennio-yoroll-preview` marketplace from this checkout, installs
+   `yoroll-test-plugin@ennio-yoroll-preview`, and verifies the installed
+   version). In Git mode, the marketplace is configured from the canonical
+   repository `https://github.com/sushou1024/yoroll-plugin-preview.git` on
+   `main` and the plugin is installed and enabled (see the appendix).
+2. Yoroll MCP is enabled at the exact Streamable HTTP URL declared in the
    installed bundle's `plugins/yoroll-test-plugin/.mcp.json`. Never treat a
    mismatch with any URL written in this document as a failure, and never
    "correct" the endpoint by switching marketplace sources.
-4. A new Codex composer is opened with the Yoroll plugin explicitly attached
+3. A new Codex composer is opened with the Yoroll plugin explicitly attached
    and the localized first-run request ready to send.
 
 Do not enter credentials, grant consent, call Yoroll business tools, open
@@ -41,133 +42,45 @@ Use the Codex CLI bundled with the desktop app for every command:
 
 Do not substitute a Homebrew, npm, or unrelated `codex` executable.
 
-## Marketplace source
+## Run the installer script
 
-Prefer the local checkout when this file is available on the host filesystem.
-Run `git rev-parse --show-toplevel` with the directory containing this
-`INSTALL.md` as the working directory, and use the returned absolute path as
-`REPO_ROOT`. Confirm that both `INSTALL.md` and
-`.agents/plugins/marketplace.json` exist under that root. Never guess a home
-directory, username, or checkout path.
-
-If this file is not in a local Git checkout, use the canonical Git source
-`https://github.com/sushou1024/yoroll-plugin-preview.git` with ref `main`.
-These are the only two supported source modes.
-
-## Mint a fresh plugin version (local checkout only)
-
-Codex desktop caches installed plugins per manifest version, and the app's
-plugin manifest snapshot refreshes only on a full app restart. Installing the
-same version string again silently keeps stale cards and skills alive. In
-local-checkout mode, always mint a fresh cache-busting version before adding
-the plugin:
+When this file is available on the host filesystem, run the installer script
+from the directory containing this `INSTALL.md`:
 
 ```bash
-bash "$REPO_ROOT/scripts/refresh-plugin-version.sh"
+bash scripts/install.sh
 ```
 
-The script prints the minted version (for example
-`0.2.0+codex.20260809164643`). Record it as `EXPECTED_VERSION` for the
-verification step below. Running the script modifies
+The script is self-locating and does everything mechanical in one pass: it
+mints a fresh cache-busting plugin version, refreshes the
+`ennio-yoroll-preview` marketplace from this checkout, installs
+`yoroll-test-plugin@ennio-yoroll-preview`, verifies the installed version
+matches the minted one (retrying the refresh cycle once), and sweeps cached
+versions older than 7 days.
+
+Success is exit code 0 with the final line `INSTALL_OK version=<v>`. Record
+`<v>` as the installed version for your report, and record the absolute path
+the script prints as `==> Repo root: ...` as `REPO_ROOT` — the task-creation
+step below uses it. (It is simply the checkout directory that contains this
+`INSTALL.md`; never guess a home directory, username, or checkout path.) The script modifies
 `plugins/yoroll-test-plugin/.codex-plugin/plugin.json` in the checkout; this
 is expected installer behavior — do not commit, revert, or report that change,
-and do not run any other Git write command because of it.
+and do not run any Git write command because of it.
 
-In Git mode the installed version is fixed by the `main` commit. Skip this
-step and use the version reported by `plugin list --json` after installation
-as `EXPECTED_VERSION`.
+On failure, report the script's output to the user verbatim. Do not fall back
+to reconstructing the install with manual command sequences beyond one rerun
+of the script. If the script itself reports a stale-version failure, ask the
+user to fully quit and reopen the ChatGPT/Codex desktop app, then rerun the
+script.
 
-## Install or update
+Only when this file is not in a local checkout (Git source mode, where no
+local script exists), use the manual command sequence in the appendix at the
+end of this document.
 
-Inspect the configured marketplaces first:
-
-```bash
-"/Applications/ChatGPT.app/Contents/Resources/codex" plugin marketplace list --json
-```
-
-If `ennio-yoroll-preview` points somewhere other than the selected source
-mode, remove the installed Yoroll plugin when present, remove only that
-marketplace entry, and then add the selected source. Do not remove or rewrite
-unrelated marketplaces.
-
-In local-checkout mode, even when the marketplace already points to
-`$REPO_ROOT`, do a full refresh so Codex picks up the freshly minted version
-instead of its stored snapshot: remove the installed plugin when present,
-remove the `ennio-yoroll-preview` marketplace entry, and re-add it:
-
-```bash
-"/Applications/ChatGPT.app/Contents/Resources/codex" plugin remove \
-  yoroll-test-plugin@ennio-yoroll-preview
-"/Applications/ChatGPT.app/Contents/Resources/codex" plugin marketplace remove \
-  ennio-yoroll-preview
-"/Applications/ChatGPT.app/Contents/Resources/codex" plugin marketplace add \
-  "$REPO_ROOT"
-```
-
-(The first two commands may fail when nothing is installed yet; that is fine.)
-
-When no local checkout exists, add the canonical Git source, and refresh an
-existing Git source with `plugin marketplace upgrade` before reinstalling:
-
-```bash
-"/Applications/ChatGPT.app/Contents/Resources/codex" plugin marketplace add \
-  https://github.com/sushou1024/yoroll-plugin-preview.git --ref main
-```
-
-Install or refresh the plugin from the selected marketplace:
-
-```bash
-"/Applications/ChatGPT.app/Contents/Resources/codex" plugin add \
-  yoroll-test-plugin@ennio-yoroll-preview
-```
-
-Verify it with:
-
-```bash
-"/Applications/ChatGPT.app/Contents/Resources/codex" plugin list --json
-"/Applications/ChatGPT.app/Contents/Resources/codex" mcp get yoroll
-```
-
-The plugin must be installed and enabled. In local mode, `source.path` and
-`marketplaceSource.source` must resolve under the discovered `REPO_ROOT`. In Git
-mode, `marketplaceSource.source` must identify the canonical repository and the
-configured ref must be `main`. Yoroll MCP must be enabled with Streamable HTTP
-at the URL declared in the bundle's `.mcp.json` (the bundle is the single
-source of truth for the environment). A local `ON_USE` installation may report
-`Not logged in` until the first-run browser handoff; a store installation may
-already have completed OAuth.
-
-## Verify the cache was actually broken (local checkout only)
-
-In `plugin list --json`, the `yoroll-test-plugin` entry must report exactly
-`EXPECTED_VERSION` — the version minted by `scripts/refresh-plugin-version.sh`
-in this run. Any other version means Codex served a stale cached plugin: report
-that the cache was not broken, then retry once — run the refresh script again,
-repeat the remove / marketplace remove / marketplace add / plugin add sequence,
-and re-check the version. If the second attempt still mismatches, stop and ask
-the user to fully quit and reopen the ChatGPT/Codex desktop app, then rerun
-this installer.
-
-## Sweep stale cached plugin versions
-
-After a verified install, clean up Codex's per-version plugin cache at
-`~/.codex/plugins/cache/ennio-yoroll-preview/yoroll-test-plugin/` (use
-`$CODEX_HOME/plugins/cache/...` instead when `CODEX_HOME` is set). Each
-subdirectory is one installed version. Keep the freshly installed version and
-every version directory modified within the last 7 days; delete only versions
-older than 7 days.
-
-Retention is by age, not by count: the desktop app's plugin manifest snapshot
-refreshes only on a full app restart, so a running session may still resolve
-skill paths inside any version installed since the last restart — during
-active development that can be many versions in a single day, and a
-keep-newest-N policy deletes directories the snapshot still references,
-turning harmless staleness into "skill path does not exist" mid-session. A
-7-day window can never collide with a snapshot from the current app run.
-Delete only inside this plugin's cache directory; never touch other plugins'
-caches. If a session still reports a missing skill path, ask the user to fully
-quit and reopen the app (this refreshes the manifest snapshot), then reinstall
-once.
+After a successful install, Yoroll MCP is registered declaratively from the
+installed bundle's `.mcp.json`; a local `ON_USE` installation may report
+`Not logged in` until the first-run browser handoff, and that is not a
+failure.
 
 ## Resolve the first-run language
 
@@ -354,3 +267,26 @@ For manual authentication diagnosis only:
 ```bash
 "/Applications/ChatGPT.app/Contents/Resources/codex" mcp login yoroll
 ```
+
+## Appendix: manual install for Git source mode only
+
+Use this sequence only when `INSTALL.md` is not in a local checkout, so
+`scripts/install.sh` is unavailable. The installed version is fixed by the
+`main` commit; there is no version to mint.
+
+```bash
+CODEX="/Applications/ChatGPT.app/Contents/Resources/codex"
+"$CODEX" plugin remove yoroll-test-plugin@ennio-yoroll-preview   # may fail; fine
+"$CODEX" plugin marketplace remove ennio-yoroll-preview          # may fail; fine
+"$CODEX" plugin marketplace add \
+  https://github.com/sushou1024/yoroll-plugin-preview.git --ref main
+"$CODEX" plugin add yoroll-test-plugin@ennio-yoroll-preview
+"$CODEX" plugin list --json
+```
+
+In `plugin list --json`, the `yoroll-test-plugin@ennio-yoroll-preview` entry
+must be installed and enabled, with `marketplaceSource.source` identifying the
+canonical repository on ref `main`. Use the reported version as the installed
+version in your report. Do not remove or rewrite unrelated marketplaces. In
+Git mode there is no `REPO_ROOT`; create the new task without a workspace
+binding (or with the user's chosen project directory when one is evident).
