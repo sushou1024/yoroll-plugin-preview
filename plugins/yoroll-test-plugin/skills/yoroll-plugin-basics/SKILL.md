@@ -195,10 +195,21 @@ running; then continue polling without resubmitting the business tool.
    `create_browser_handoff` with an empty object for the browser-session
    bootstrap described above. It exchanges the existing MCP identity for a
    short-lived one-time Yoroll URL and does not perform a business action.
-3. For every other protected tool, let the first confirmed call return the
-   standard OAuth challenge. The Codex host owns authorization, PKCE, callback
+3. **In-browser session login (primary path).** When a protected tool fails
+   with an unauthorized error whose metadata includes a `login_url`: open that
+   exact `login_url` in Codex's in-app Browser under the reusable-tab policy
+   above (never in the system browser, never quoted in chat — the link is
+   single-use), then immediately call `wait_for_login` in the same model turn
+   and keep re-calling it while it returns `pending`, without ending the turn
+   or printing a waiting message. When it returns `authorized`, retry the tool
+   that was rejected with the same `client_request_id`. The user signs in on
+   the Yoroll page once; on later conversations the same link completes
+   instantly from the browser's existing login. After login the Browser tab is
+   a genuinely signed-in Yoroll workspace — keep it as the visible workbench.
+4. If the unauthorized error carries no `login_url`, fall back to the
+   standard OAuth challenge: the Codex host owns authorization, PKCE, callback
    handling, and token storage; do not construct an authorization URL yourself.
-4. After authorization, retry the identical tool call only when the host did
+   After authorization, retry the identical tool call only when the host did
    not resume it automatically, using the same `client_request_id`.
 5. Never ask for a password, verification code, cookie, consent code, access
    token, or refresh token in chat.
