@@ -153,16 +153,21 @@ this installer.
 After a verified install, clean up Codex's per-version plugin cache at
 `~/.codex/plugins/cache/ennio-yoroll-preview/yoroll-test-plugin/` (use
 `$CODEX_HOME/plugins/cache/...` instead when `CODEX_HOME` is set). Each
-subdirectory is one installed version. Keep the freshly installed version plus
-the two most recent older versions, and delete everything older than those.
+subdirectory is one installed version. Keep the freshly installed version and
+every version directory modified within the last 7 days; delete only versions
+older than 7 days.
 
-Keep two old versions, not zero: the desktop app's plugin manifest snapshot
+Retention is by age, not by count: the desktop app's plugin manifest snapshot
 refreshes only on a full app restart, so a running session may still resolve
-skill paths inside an older version's directory — deleting every old version
-turns that harmless staleness into "skill path does not exist" mid-session,
-and two survivors cover a rapid pair of installs performed without an app
-restart in between. Delete only inside this plugin's cache directory; never
-touch other plugins' caches.
+skill paths inside any version installed since the last restart — during
+active development that can be many versions in a single day, and a
+keep-newest-N policy deletes directories the snapshot still references,
+turning harmless staleness into "skill path does not exist" mid-session. A
+7-day window can never collide with a snapshot from the current app run.
+Delete only inside this plugin's cache directory; never touch other plugins'
+caches. If a session still reports a missing skill path, ask the user to fully
+quit and reopen the app (this refreshes the manifest snapshot), then reinstall
+once.
 
 ## Resolve the first-run language
 
