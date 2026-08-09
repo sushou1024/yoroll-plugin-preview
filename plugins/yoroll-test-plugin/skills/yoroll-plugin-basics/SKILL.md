@@ -164,9 +164,12 @@ arguments as JSON or duplicate the business operation in Browser.
 
 - On installer-created first run, the creation-menu card plus the single
   localized welcome paragraph above are the entire user-facing response.
-- On every later anonymous menu render, treat the card itself
-  as the entire response. End the turn immediately after the card succeeds and
-  add no assistant-authored summary below it.
+- On every later anonymous menu render, the same reply that renders the card
+  must first give a 2-3 sentence introduction of the plugin's capabilities —
+  interactive film games, custom-gameplay web film mini-games, image
+  generation, and video generation — written in the user's language, and then
+  show the card. End the turn once the card succeeds and add no
+  assistant-authored summary below the card.
 - If the host delivers an application-authored request for
   `render_creation_menu`, execute it without echoing or paraphrasing it.
 - Never append statements such as “the card is displayed”, “currently not
