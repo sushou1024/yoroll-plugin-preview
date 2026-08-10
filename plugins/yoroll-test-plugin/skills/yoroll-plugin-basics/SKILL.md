@@ -213,33 +213,30 @@ running; then continue polling without resubmitting the business tool.
 3. **Pre-warm authorization at the spend-confirmation moment, in two
    phases.** Just before asking the user to confirm a credit-consuming plan,
    silently probe authorization with one read call (`get_account`). If it is
-   unauthorized, start the host authorization (rule 4), present the spend
-   confirmation in the same message — telling the user to finish the
-   sign-in that just opened and then reply to confirm — and **end the turn**.
-   Never keep polling any wait tool while a user reply is pending: waiting
-   for the user and calling tools do not mix. When the user replies, verify
-   authorization with one `get_account` call, then proceed. Never probe
-   earlier than the first spend decision, and never block card browsing or
-   idea collection on authorization.
-4. **Host OAuth (primary path).** When a protected tool fails with an
-   unauthorized error, let the host's standard OAuth challenge drive
-   authorization first; the Codex host owns authorization, PKCE, callback
-   handling, and token storage — never construct an authorization URL
-   yourself. If the host does not surface an authorization prompt, run the
-   bundled CLI once from the shell:
-   `/Applications/ChatGPT.app/Contents/Resources/codex mcp login yoroll`
-   (kill any lingering `codex mcp login` process first), tell the user to
-   complete the sign-in and consent pages in the browser window that opens,
-   and end the turn. When the user replies, verify with `get_account` and
-   retry the rejected tool with the same `client_request_id`. This
-   authorization persists across tasks and sessions.
-5. Treat an unauthorized error's `login_url` as a secondary path only: use
-   it when host OAuth is unavailable and the deployment's session login is
-   known to work. Open the exact `login_url` in the in-app Browser (never the
-   system browser, never quoted in chat — it is single-use), call
-   `wait_for_login` up to three times, and if it still returns `pending`,
-   stop polling, ask the user to finish signing in, and end the turn instead
-   of looping.
+   unauthorized, start the sign-in (rule 4), present the spend confirmation
+   in the same message — telling the user to finish the sign-in in the
+   browser window that just opened and then reply to confirm — and **end the
+   turn**. Never keep polling any wait tool while a user reply is pending:
+   waiting for the user and calling tools do not mix. When the user replies,
+   verify authorization with one `get_account` call, then proceed. Never
+   probe earlier than the first spend decision, and never block card
+   browsing or idea collection on authorization.
+4. **Sign-in runs in the user's default browser — the only path.** When a
+   protected tool fails with an unauthorized error: kill any lingering
+   `codex mcp login` process, then run the bundled CLI once from the shell:
+   `/Applications/ChatGPT.app/Contents/Resources/codex mcp login yoroll`.
+   The user's default browser opens the Yoroll sign-in and consent pages.
+   Tell the user in one short line to complete them there and come back and
+   reply when done, then **end the turn** — never poll any wait tool while
+   the user is away. When the user replies, verify with `get_account` and
+   retry the rejected tool with the same `client_request_id` (no double
+   charge). This authorization persists across tasks and sessions. If the
+   CLI run fails or the browser never opens, give the user that exact
+   command to run in their own terminal and end the turn.
+5. Ignore any `login_url` carried by unauthorized errors, and never call
+   `wait_for_login`: the in-app-browser session login is not part of this
+   flow. Never construct an authorization URL yourself, and never open
+   sign-in pages in the in-app Browser.
 6. Never ask for a password, verification code, cookie, consent code, access
    token, or refresh token in chat.
 7. Do not open `/auth/mcp-connect`, call the legacy
