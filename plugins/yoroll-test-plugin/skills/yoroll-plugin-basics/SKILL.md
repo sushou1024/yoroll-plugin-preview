@@ -210,29 +210,26 @@ running; then continue polling without resubmitting the business tool.
    `create_browser_handoff` with an empty object for the browser-session
    bootstrap described above. It exchanges the existing MCP identity for a
    short-lived one-time Yoroll URL and does not perform a business action.
-3. **Pre-warm authorization at the spend-confirmation moment, in two
-   phases.** Just before asking the user to confirm a credit-consuming plan,
-   silently probe authorization with one read call (`get_account`). If it is
-   unauthorized, start the sign-in (rule 4), present the spend confirmation
-   in the same message — telling the user to finish the sign-in in the
-   browser window that just opened and then reply to confirm — and **end the
-   turn**. Never keep polling any wait tool while a user reply is pending:
-   waiting for the user and calling tools do not mix. When the user replies,
-   verify authorization with one `get_account` call, then proceed. Never
-   probe earlier than the first spend decision, and never block card
-   browsing or idea collection on authorization.
-4. **Sign-in runs in the user's default browser — the only path.** When a
-   protected tool fails with an unauthorized error: kill any lingering
-   `codex mcp login` process, then run the bundled CLI once from the shell:
-   `/Applications/ChatGPT.app/Contents/Resources/codex mcp login yoroll`.
-   The user's default browser opens the Yoroll sign-in and consent pages.
-   Tell the user in one short line to complete them there and come back and
-   reply when done, then **end the turn** — never poll any wait tool while
-   the user is away. When the user replies, verify with `get_account` and
-   retry the rejected tool with the same `client_request_id` (no double
-   charge). This authorization persists across tasks and sessions. If the
-   CLI run fails or the browser never opens, give the user that exact
-   command to run in their own terminal and end the turn.
+3. Never probe authorization earlier than the first spend decision, and
+   never block card browsing or idea collection on it. The user's consent to
+   the spend plan already covers a sign-in that interrupts it — after the
+   sign-in completes, continue without asking anything again.
+4. **Blocking sign-in in the user's default browser — the only path.** When
+   a protected tool fails with an unauthorized error: kill any lingering
+   `codex mcp login` process, say one short line that a sign-in page just
+   opened in the browser and that the task continues automatically once
+   approved, then run the bundled CLI from the shell and **wait for the
+   process to exit**:
+   `/Applications/ChatGPT.app/Contents/Resources/codex mcp login yoroll`
+   The command blocks until the user finishes the browser sign-in and
+   consent — do not poll anything and do not end the turn while it runs.
+   When it exits successfully, immediately retry the rejected tool with the
+   same `client_request_id` (no double charge) and continue the flow without
+   asking anything. This authorization persists across tasks and sessions.
+   Only if the command times out or fails: end the turn gracefully, telling
+   the user the sign-in window is still open and to reply once approved
+   (verify with `get_account` on their reply), and offer the exact command
+   to run in their own terminal as the last resort.
 5. Ignore any `login_url` carried by unauthorized errors, and never call
    `wait_for_login`: the in-app-browser session login is not part of this
    flow. Never construct an authorization URL yourself, and never open
