@@ -150,9 +150,12 @@ Chinese: `[@Yoroll](plugin://yoroll-test-plugin@ennio-yoroll-preview) 开始使�
 English: `[@Yoroll](plugin://yoroll-test-plugin@ennio-yoroll-preview) Get started with Yoroll.`
 
 For another language, translate the message text but never alter the plugin
-Markdown reference. After sending, verify the new task shows the orange Yoroll
-plugin chip on that first message; if the chip is missing, report that and use
-the fallback below.
+Markdown reference. Once the send call succeeds and the app is navigated to
+the new task, **this installation task is finished — report and stop
+immediately**. Do not wait for, watch, or verify the new task's first-run
+response (no waiting on threads, no checking that a card rendered, no
+confirming plugin activity); the new task owns its own first run. Only if the
+send call itself fails, use the fallback below.
 
 **Fallback only** — when the host exposes no ordinary task-management tools,
 the calls fail, or `create_thread` cannot bind a workspace: open the new-task
@@ -244,8 +247,9 @@ Yoroll 已安装，新的创作任务已准备好；请发送预填消息。
 Yoroll is installed and the new creation task is ready; send the prefilled message once.
 ```
 
-Do not report primary-path success before the first message is actually sent
-and the Yoroll plugin chip is visible on it.
+Do not report primary-path success before the first message send call has
+succeeded; do not delay the report for anything that happens inside the new
+task afterwards.
 
 ## Authentication boundary
 
