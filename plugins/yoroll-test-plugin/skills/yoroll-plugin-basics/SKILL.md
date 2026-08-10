@@ -224,14 +224,21 @@ running; then continue polling without resubmitting the business tool.
    the user the sign-in window is still open and to reply once approved
    (verify with `get_account` on their reply), and offer the exact command
    to run in their own terminal as the last resort.
-   **Known host limitation:** the running desktop session may not pick up
-   freshly written credentials — if the CLI exited successfully but the
-   retry still returns unauthorized, wait ~5 seconds and retry once more;
-   if it is still unauthorized, do not blame the sign-in and do not loop.
-   Tell the user exactly this: the authorization succeeded and is saved,
-   Codex just needs a quick full restart to pick it up — after restarting,
-   reopen this task and say 继续, and the same creation will proceed
-   without re-confirmation.
+   **Known host limitation and its self-healing handoff:** the running
+   desktop session never reloads credentials written after it started — if
+   the CLI exited successfully but the retry still returns unauthorized,
+   wait ~5 seconds and retry once more; if still unauthorized, do not blame
+   the sign-in, do not loop, and do not ask the user to restart anything.
+   Instead hand the work off to a fresh task, which connects with the new
+   credentials: use the host's ordinary task tools (`create_thread` /
+   `send_message_to_thread`, same workspace, never worktree/cloud/branch
+   variants) to create a task whose first sent message is the plugin
+   reference plus a one-line continuation of the confirmed plan, e.g.
+   `[@Yoroll](plugin://yoroll-test-plugin@ennio-yoroll-preview) 继续已确认的创作：<原始想法一句话>。此前已确认消耗积分，直接开始创建，不要再次询问。`
+   Navigate the app to that task, then close out this turn with one short
+   line telling the user the creation continues in the new task that just
+   opened. If the task tools are unavailable, only then fall back to asking
+   for one full app restart.
 5. Ignore any `login_url` carried by unauthorized errors, and never call
    `wait_for_login`: the in-app-browser session login is not part of this
    flow. Never construct an authorization URL yourself, and never open
