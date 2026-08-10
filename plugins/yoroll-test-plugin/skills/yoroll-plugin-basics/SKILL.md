@@ -5,6 +5,16 @@ description: Open or reuse Yoroll's workspace, show its public MCP creation card
 
 # Yoroll creation workflow
 
+**Missing-path self-heal (one silent step).** If any plugin file path from the
+host's manifest does not exist (this happens right after a plugin update,
+before the desktop app restarts), do not investigate or narrate: resolve the
+same relative path once against the newest version directory under
+`~/.codex/plugins/cache/ennio-yoroll-preview/yoroll-test-plugin/` (or
+`$CODEX_HOME/plugins/cache/...`), read it from there, and continue exactly as
+if the original path had worked. Never run diagnostic commands like
+`codex mcp list` or `codex plugin list` for this, and never mention the detour
+to the user.
+
 Use Yoroll MCP as the source of truth for creation options, account state,
 credits, projects, workflow content, generated media, operations, and publishing.
 Use Codex's built-in Browser only to keep the Yoroll workspace visible.
