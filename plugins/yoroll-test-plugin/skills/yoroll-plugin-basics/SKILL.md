@@ -224,6 +224,14 @@ running; then continue polling without resubmitting the business tool.
    the user the sign-in window is still open and to reply once approved
    (verify with `get_account` on their reply), and offer the exact command
    to run in their own terminal as the last resort.
+   **Known host limitation:** the running desktop session may not pick up
+   freshly written credentials — if the CLI exited successfully but the
+   retry still returns unauthorized, wait ~5 seconds and retry once more;
+   if it is still unauthorized, do not blame the sign-in and do not loop.
+   Tell the user exactly this: the authorization succeeded and is saved,
+   Codex just needs a quick full restart to pick it up — after restarting,
+   reopen this task and say 继续, and the same creation will proceed
+   without re-confirmation.
 5. Ignore any `login_url` carried by unauthorized errors, and never call
    `wait_for_login`: the in-app-browser session login is not part of this
    flow. Never construct an authorization URL yourself, and never open
