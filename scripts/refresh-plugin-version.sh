@@ -31,10 +31,17 @@ command -v node >/dev/null 2>&1 || {
   exit 1
 }
 
-TIMESTAMP=$(date +%Y%m%d%H%M%S)
+# Version suffix derives from the plugin content hash (manifest excluded):
+# unchanged content keeps the same version, so the desktop's manifest snapshot
+# stays valid across reinstalls and tasks never hit "skill path does not
+# exist"; changed content mints a new version and busts the cache exactly when
+# needed.
+PLUGIN_DIR="$REPO_ROOT/plugins/yoroll-test-plugin"
+CONTENT_HASH=$(cd "$PLUGIN_DIR" && find . -type f ! -path './.codex-plugin/plugin.json' -print0 \
+  | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | cut -c1-12)
 node -e '
   const fs = require("node:fs");
-  const [manifestPath, timestamp] = process.argv.slice(1);
+  const [manifestPath, contentHash] = process.argv.slice(1);
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   if (typeof manifest.version !== "string" || manifest.version.length === 0) {
     console.error("plugin.json has no valid version field");
@@ -45,7 +52,7 @@ node -e '
     console.error(`unexpected base version: ${base}`);
     process.exit(1);
   }
-  manifest.version = `${base}+codex.${timestamp}`;
+  manifest.version = `${base}+codex.${contentHash}`;
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
   process.stdout.write(manifest.version + "\n");
-' "$MANIFEST" "$TIMESTAMP"
+' "$MANIFEST" "$CONTENT_HASH"

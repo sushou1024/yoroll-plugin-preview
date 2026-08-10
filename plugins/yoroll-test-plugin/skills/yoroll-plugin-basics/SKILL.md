@@ -67,51 +67,28 @@ available creation options:
 1. Keep the handoff quiet. If a progress update is required before tool calls,
    use only one short localized line. In Chinese use `正在打开 Yoroll…`; in
    English use `Opening Yoroll…`. Do not mention Skill loading, files,
-   installation checks, authentication policy, internal tool names, `iab`,
-   routing, visibility state, retries, or implementation rules.
+   installation checks, authentication policy, internal tool names, routing,
+   retries, or implementation rules.
 2. Do not emit another commentary or progress paragraph during this first-run
    turn. Tool activity may remain visible in the host, but assistant-authored
    narration must stay hidden until the final welcome.
-3. Load the built-in Browser-control instructions.
-4. Select Codex's in-app Browser explicitly with the persistent `iab` binding.
-   Do not use URL-based/default browser selection or Chrome for this first-run
-   handoff.
-5. Call `create_browser_handoff` with an empty object. If it returns an
-   unauthorized error — with or without a `login_url` — **do not open any
-   login page during first-run**. Instead navigate the reusable in-app
-   Browser tab to the plain public homepage `https://dev.yoroll.ai` (an
-   anonymous view is fine as the visible workspace), then proceed to the
-   public creation card. Browsing the card never requires login;
-   authorization happens later, at the first spend-confirmation or the first
-   protected business call. When the handoff call succeeds, it is a session
-   bootstrap only: it does not create content, spend credits, list projects,
-   or accept a client-selected destination.
-6. Claim an existing Yoroll tab when one is already open; otherwise reuse
-   the current in-app Browser tab, creating one only when no tab exists. Navigate
-   that tab immediately to the exact returned `handoff_url`, wait for its
-   one-time redirect to `https://app.yoroll.ai/`, and never show or quote the
-   handoff URL. If handoff creation is unavailable, do not replace it with an
-   unauthenticated bare URL; continue with the public card and report the
-   browser-session limitation only when it matters. Avoid duplicate tabs and do
-   not add a language path.
-7. After the page is ready, set the Browser `visibility` capability to `true`
-   once. Do not poll, narrate, or expose the visibility state.
-8. Do not inspect or transfer cookies, local storage, passwords, or session data.
-9. As the final Browser action for the turn, finalize the Yoroll tab with
-   `status: "deliverable"` so the live Yoroll page stays open and visible beside
-   the task. After this handoff, do not hide, close, disconnect, reselect, or
-   refocus the Browser, and do not perform another Browser action in the turn.
-10. Call `render_creation_menu` in the same assistant turn.
-11. Use exactly one compact welcome paragraph as the user-visible final reply.
+3. **Do not touch the Browser during first-run.** No Browser-control loading,
+   no in-app Browser selection, no `create_browser_handoff`, no homepage tab,
+   no visibility changes. The first-run deliverable is the welcome line plus
+   the creation card, nothing else. The Yoroll workspace opens later, the
+   first time there is a real result page worth showing (per the Visible
+   Yoroll links policy).
+4. Call `render_creation_menu` as the first tool action of the turn.
+5. Use exactly one compact welcome paragraph as the user-visible final reply.
    For Chinese use: `Yoroll 插件已经装好了。你可以创作互动影游、做自定义玩法的影视小游戏，也可以生成图片和视频——在卡片上选一个方向，或者直接说你的想法。`
    For English use: `The Yoroll plugin is installed. You can create an interactive film game, build a web film mini game with custom gameplay, or generate images and videos — pick a direction on the card, or just describe what you want.`
    Translate the English version faithfully for other resolved languages.
-12. Do not add bullets, headings, a second question, “Yoroll workspace is open”, or
+6. Do not add bullets, headings, a second question, “Yoroll workspace is open”, or
    any explanation below the creation card. The card is the selection surface.
 
-Apart from the no-argument browser-session handoff above, do not call account or
-business tools, create content, spend credits, list projects, or ask whether to
-create or continue merely because first-run onboarding began. Do not advertise
+Do not call account or business tools, create content, spend credits, list
+projects, or ask whether to create or continue merely because first-run
+onboarding began. Do not advertise
 dialogue-speech or background-music generation in first-run onboarding.
 
 ## Route the user's intent
