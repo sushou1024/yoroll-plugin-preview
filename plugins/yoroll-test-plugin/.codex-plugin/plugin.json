@@ -1,6 +1,6 @@
 {
   "name": "yoroll-test-plugin",
-  "version": "0.2.0+codex.667977e4e420",
+  "version": "0.2.0+codex.5784f0f82ba7",
   "description": "Choose a Yoroll intent, reuse one OAuth login in the Browser, and keep creation results visible.",
   "author": {
     "name": "Yoroll",

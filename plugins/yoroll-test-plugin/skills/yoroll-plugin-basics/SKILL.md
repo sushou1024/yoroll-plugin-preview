@@ -89,11 +89,18 @@ available creation options:
    first time there is a real result page worth showing (per the Visible
    Yoroll links policy).
 4. Call `render_creation_menu` as the first tool action of the turn.
-5. Use exactly one compact welcome paragraph as the user-visible final reply.
+5. Emit exactly one compact welcome paragraph as the only user-visible
+   narration of the turn.
    For Chinese use: `Yoroll 插件已经装好了。你可以创作互动影游、做自定义玩法的影视小游戏，也可以生成图片和视频——在卡片上选一个方向，或者直接说你的想法。`
    For English use: `The Yoroll plugin is installed. You can create an interactive film game, build a web film mini game with custom gameplay, or generate images and videos — pick a direction on the card, or just describe what you want.`
    Translate the English version faithfully for other resolved languages.
-6. Do not add bullets, headings, a second question, “Yoroll workspace is open”, or
+6. **Do not end the turn yet.** After the welcome, keep silently polling the
+   card with `wait_for_creation_intent` under the bounded-wait rule (about six
+   consecutive `pending` results ≈ 2 minutes, no extra narration). If a
+   selection arrives, continue straight into that intent's flow in this same
+   turn; only on timeout end the turn quietly — the welcome already said
+   everything, add nothing.
+7. Do not add bullets, headings, a second question, “Yoroll workspace is open”, or
    any explanation below the creation card. The card is the selection surface.
 
 Do not call account or business tools, create content, spend credits, list
