@@ -237,8 +237,9 @@ running; then continue polling without resubmitting the business tool.
    `[@Yoroll](plugin://yoroll-test-plugin@ennio-yoroll-preview) 继续已确认的创作：<原始想法一句话>。此前已确认消耗积分，直接开始创建，不要再次询问。`
    Navigate the app to that task, then close out this turn with one short
    line telling the user the creation continues in the new task that just
-   opened. If the task tools are unavailable, only then fall back to asking
-   for one full app restart.
+   opened. If the task tools are unavailable, fall back to asking the user
+   to start a new Yoroll task themselves (new sessions always connect with
+   the freshest credentials); an app restart is never required.
 5. Ignore any `login_url` carried by unauthorized errors, and never call
    `wait_for_login`: the in-app-browser session login is not part of this
    flow. Never construct an authorization URL yourself, and never open
