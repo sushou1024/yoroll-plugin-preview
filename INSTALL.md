@@ -122,6 +122,26 @@ Initial message:
 [@Yoroll](plugin://yoroll-test-plugin@ennio-yoroll-preview) Get started with Yoroll.
 ```
 
+## Sign in during installation (install-time auth)
+
+Immediately after `INSTALL_OK`, pre-authorize Yoroll so every later task
+starts already signed in (this sidesteps a host limitation where a running
+session never reloads credentials written after it starts):
+
+1. First check: run
+   `/Applications/ChatGPT.app/Contents/Resources/codex mcp list` and look at
+   the `yoroll` row. If it already shows an authenticated state (for example
+   `OAuth`), skip this section entirely.
+2. Otherwise kill any lingering `codex mcp login` process, tell the user in
+   one short line that a Yoroll sign-in page is opening in their browser and
+   that installation continues automatically once they approve (or that they
+   can close the page to skip and sign in later), then run and **wait for the
+   blocking process to exit**:
+   `/Applications/ChatGPT.app/Contents/Resources/codex mcp login yoroll`
+3. If it exits successfully, note "signed in" for the report. If it fails or
+   times out, do not retry and do not block installation — note "sign-in
+   deferred" and continue; the plugin authorizes on first use instead.
+
 ## Create and open the Yoroll task
 
 The newly installed plugin is not loaded into the installation task. A new
@@ -253,8 +273,10 @@ task afterwards.
 
 ## Authentication boundary
 
-The repository marketplace uses `authentication: ON_USE`; the published store
-listing may authenticate during installation. The plugin MCP configuration must
+The repository marketplace uses `authentication: ON_INSTALL`, and the
+installer pre-authorizes via the blocking CLI sign-in above (skippable); the
+published store listing authenticates during installation as well. On-use
+authorization remains the fallback for skipped or revoked sign-ins. The plugin MCP configuration must
 not declare the whole server OAuth-only or predeclare a global scope set.
 `render_creation_menu` and the headless `get_creation_options` remain anonymous
 at the MCP protocol boundary. The no-argument `create_browser_handoff` is the
